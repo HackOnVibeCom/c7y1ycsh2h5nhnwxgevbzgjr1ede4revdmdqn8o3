@@ -116,7 +116,7 @@ git push upstream main    # mirror to ikhsanRamadhan/launchdesk
 ```
 functions/api/    Cloudflare Pages Functions (analyze, revise, kit, health)
 src/lib/aso-rules 28 deterministic ASO rules + scorer (the quality gate)
-src/lib/extract   Apple Lookup API + Play Store metadata fetch
+src/lib/extract   Apple Lookup API (retry + apps.apple.com scrape fallback) + Play Store HTML fetch (locale fallback, screenshot + trailer video extraction)
 src/lib/llm       OpenRouter client + deterministic fallback
 src/lib/promo     deep link / QR / smart banner / publish payload
 src/components    Landing, Analyze, Result, Revise, PromoKit
