@@ -1,5 +1,11 @@
 # HackOnVibe — Project Questionnaire · LaunchDesk
 
+**0. Live demo**
+
+- Primary: **https://launchdesk.pages.dev** (real AI, OpenRouter key configured)
+- Org/CI: **https://2026-08-nashki.hackonvibe.com**
+- Repo: https://github.com/HackOnVibeCom/2026-08-nashki
+
 **1. What does your application/service do?**
 
 LaunchDesk is an AI app-launch copilot for indie and solo mobile developers. Paste

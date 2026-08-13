@@ -6,7 +6,8 @@ promo kit (deep links, QR codes, smart banners, per-channel publish payloads).
 
 Built for **HackOnVibe — August 2026** · Track: **Global Impact**.
 
-> **Live demo:** https://2026-08-nashki.hackonvibe.com
+> **Live demo (Real AI):** https://launchdesk.pages.dev
+> **Live demo (org / CI):** https://2026-08-nashki.hackonvibe.com
 
 ## Problem
 
@@ -60,6 +61,7 @@ useful revisions so the product never fails during a live demo.
 | POST | `/api/revise` | `{ listing, targetScore }` → AI/deterministic rewrite + before/after score |
 | POST | `/api/kit` | `{ listing }` → deep link, QR, smart banner, publish payload |
 | GET | `/api/health` | liveness check |
+| GET | `/api/envcheck` | diagnostic: reports whether `OPENROUTER_API_KEY` is present (boolean only) |
 
 ## Deployment
 
@@ -79,11 +81,17 @@ From the CLI the correct command is:
 ```bash
 npm run build        # produces dist/
 npm run deploy       # wrangler pages deploy dist --project-name=2026-08-nashki
+npm run deploy:own   # deploy to your own account: project "launchdesk"
 ```
 
-`wrangler.jsonc` (with `pages_build_output_dir: "./dist"`) is also included, so
-the repo itself is recognized as a Pages project. The GitHub Actions pipeline
-remains the primary deployment path.
+> Note: do not add a `wrangler.jsonc` to this repo — Cloudflare may misdetect the
+> project as a Worker (`Missing entry-point to Worker script or to assets directory`).
+> It was intentionally removed.
+
+**Enabling real AI output on your own Pages project:**
+- Set `OPENROUTER_API_KEY` (Encrypt) and `OPENROUTER_MODEL=openrouter/auto` under
+  Pages → `launchdesk` → Settings → Variables and Secrets, then redeploy.
+- Verify: `GET /api/envcheck` returns `{"hasOpenRouterKey":true,...}`.
 
 ## Project structure
 

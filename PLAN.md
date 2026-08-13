@@ -1,6 +1,6 @@
 # PLAN.md — LaunchDesk (HackOnVibe August 2026, Global Impact)
 
-> Status: **scaffolding** · Updated: 2026-08-13 · Author: solo (Ikhsandadan)
+> Status: **live, real-AI pending redeploy** · Updated: 2026-08-13 · Author: solo (Ikhsandadan)
 > Target: **Juara 1 Track Global Impact** · Deadline hard cutoff: **Senin 17 Agu 2026 10:00 WIB**
 
 ---
@@ -9,6 +9,9 @@
 
 Proyek hackathon solo. Repo: `HackOnVibeCom/2026-08-nashki`, auto-deploy ke Cloudflare
 Pages (`2026-08-nashki.hackonvibe.com`) via `.github/workflows/deploy.yml`.
+**Live utama (real AI): `https://launchdesk.pages.dev`** — project Pages milik akun user
+(Direct Upload via Wrangler, bukan Git integration → perlu `npm run deploy:own` manual
+untuk tiap update). Diagnosa env: `GET /api/envcheck` → `{"hasOpenRouterKey":...}`.
 
 Pipeline deploy:
 - package.json di root dengan script `build` → Node 20, `npm ci`/`npm install`, `npm run build`.
@@ -104,49 +107,54 @@ Kriteria juri: *"A functional backend is valued more highly than visual aestheti
 
 ## 4. Task terurut (bite-size, TDD, frequent commit)
 
-### Phase 0 — Scaffold (Hari ini, Kamis 13 Agu)
-- [ ] T0.1 `package.json`, `vite.config.ts`, `tsconfig.json`, `tailwind`, `index.html`, `src/main.tsx`, `src/App.tsx` minimal (Hello LaunchDesk).
-- [ ] T0.2 `functions/api/health.ts` dummy endpoint.
-- [ ] T0.3 **Push ke main** → verifikasi live `https://2026-08-nashki.hackonvibe.com/api/health` 200. (DE-RISK PIPELINE)
-- [ ] T0.4 Vitest setup (`vitest.config.ts`, script `test`), 1 smoke test.
-- [ ] T0.5 Commit "scaffold: vite+react+tailwind+cf-functions".
+### Phase 0 — Scaffold (Kamis 13 Agu) ✅
+- [x] T0.1 `package.json`, `vite.config.ts`, `tsconfig.json`, `tailwind`, `index.html`, `src/main.tsx`, `src/App.tsx` minimal.
+- [x] T0.2 `functions/api/health.ts` dummy endpoint.
+- [x] T0.3 **Push ke main** → verifikasi live `/api/health` 200. (DE-RISK PIPELINE) ✅
+- [x] T0.4 Vitest setup, smoke test.
+- [x] T0.5 Commit "scaffold".
 
-### Phase 1 — Core engine (Jumat 14 Agu)
-- [ ] T1.1 `src/lib/aso-rules/types.ts` + `rules.ts` (28 aturan, tiap rule: `id, label, weight, check(listing): {pass, points, hint}`).
-- [ ] T1.2 `scorer.ts` — `score(listing): AsoScore` (0-100 + breakdown). TDD: fixtures listing bagus/buruk.
-- [ ] T1.3 `extract/apple.ts` + `play.ts` + `index.ts` — parse URL, fetch listing real. TDD: parse berbagai format URL.
-- [ ] T1.4 `functions/api/analyze.ts` — wire engine + fetch. Test manual via `wrangler dev` atau vitest unit (fetch mock).
-- [ ] T1.5 `src/store/appStore.ts` — Zustand persist; state: `appContext`, `listing`, `score`, `revisions[]`.
-- [ ] T1.6 Commit "feat: 28-rule aso engine + real listing fetch + analyze api".
+### Phase 1 — Core engine ✅
+- [x] T1.1 `src/lib/aso-rules/types.ts` + `rules.ts` (28 aturan).
+- [x] T1.2 `scorer.ts` — `score(listing): AsoScore`. TDD fixtures.
+- [x] T1.3 `extract/apple.ts` + `play.ts` + `index.ts` — parse URL, fetch listing real. TDD.
+- [x] T1.4 `functions/api/analyze.ts` — wire engine + fetch.
+- [x] T1.5 `src/store/appStore.ts` — Zustand persist `launchdesk-state-v1`.
+- [x] T1.6 Commit "feat: 28-rule aso engine + real listing fetch + analyze api".
 
-### Phase 2 — AI revise loop (Sabtu 15 Agu, kickoff 01:00 WIB)
-- [ ] T2.1 `llm/openrouter.ts` — call OpenRouter (model `openrouter/auto` atau `deepseek/...` free), system prompt + zod output.
-- [ ] T2.2 `llm/fallback.ts` — deterministic revision (bisa jalan tanpa key): perbaiki aturan yang gagal dengan template.
-- [ ] T2.3 `llm/index.ts` — `reviseListing(...)` try LLM → catch → fallback; hasil selalu `ListingData` valid.
-- [ ] T2.4 `functions/api/revise.ts` — POST → revise → re-score → return `{ before, after, scoreBefore, scoreAfter, deltas }`.
-- [ ] T2.5 `RevisePanel.tsx` — UI diff before/after + label `Real AI`/`Simulasi` + re-score.
-- [ ] T2.6 TDD: revise unit test (fallback path tanpa network; LLM path mock fetch).
-- [ ] T2.7 Commit "feat: ai revise loop with deterministic fallback (never breaks in demo)".
+### Phase 2 — AI revise loop ✅ (kode; verifikasi AI live via launchdesk.pages.dev pending)
+- [x] T2.1 `llm/openrouter.ts` — call OpenRouter (`openrouter/auto`), system prompt + zod output.
+- [x] T2.2 `llm/fallback.ts` — deterministic revision (jalan tanpa key).
+- [x] T2.3 `llm/index.ts` — `reviseListing(...)` try LLM → catch → fallback.
+- [x] T2.4 `functions/api/revise.ts` — POST → revise → re-score → `{ before, after, source }`.
+- [x] T2.5 `Revise.tsx` — UI diff before/after + label `Real AI`/`Deterministic` + re-score.
+- [x] T2.6 TDD: revise unit test (fallback + LLM mock).
+- [x] T2.7 Commit "feat: ai revise loop with deterministic fallback".
 
-### Phase 3 — Promo kit (Sabtu sore–Minggu)
-- [ ] T3.1 `lib/promo/deepLink.ts`, `qr.ts`, `smartBanner.ts`, `payload.ts` (+ unit tests).
-- [ ] T3.2 `functions/api/kit.ts` — assemble kit dari `appContext`.
-- [ ] T3.3 `PromoKit.tsx` — tab: Deep Link / QR / Smart Banner / Publish Payload (copy button).
-- [ ] T3.4 Commit "feat: promo kit - deep link, qr, smart banner, publish payload".
+### Phase 3 — Promo kit ✅
+- [x] T3.1 `lib/promo/index.ts` — deepLink, QR, smartBanner, payload (+ unit tests).
+- [x] T3.2 `functions/api/kit.ts`.
+- [x] T3.3 `PromoKit.tsx` — tab Deep Link / QR / Smart Banner / Publish Payload.
+- [x] T3.4 Commit "feat: promo kit".
 
-### Phase 4 — Dashboard, roadmap, pricing, polish (Minggu)
-- [ ] T4.1 Dashboard ringkas: score gauge, aturan gagal top-5, roadmap 30/60/90 (state-derived, label `Simulasi`).
-- [ ] T4.2 Pricing page/segment: Free + Pro ($6/bln) + Grading API (moat monetisasi).
-- [ ] T4.3 State flow check: "Edit listing" TIDAK me-reset state (regression test).
-- [ ] T4.4 UI polish (Landing hero, warna brand, responsive mobile), meta OG.
-- [ ] T4.5 Commit "feat: dashboard + roadmap + pricing + polish".
+### Phase 4 — Dashboard, roadmap, pricing, polish ⏭ (opsional, menang-kuat, setelah Real AI)
+- [ ] T4.1 Dashboard ringkas: score gauge, aturan gagal top-5, roadmap 30/60/90 (label `Simulasi`).
+- [ ] T4.2 Pricing page/segment: Free + Pro ($6/bln) + Grading API.
+- [ ] T4.3 State flow check: "Edit listing" TIDAK me-reset state.
+- [ ] T4.4 UI polish + meta OG.
+- [ ] T4.5 Commit.
 
-### Phase 5 — Deliverables (Minggu, sebelum cutoff)
-- [ ] T5.1 `questionnaire.md` di root repo (format sesuai diskusi Discord/HackOnVibe).
-- [ ] T5.2 README.md update (proyek, link live, cara demo).
+### Phase 5 — Deliverables (sebelum cutoff Senin 10:00 WIB)
+- [x] T5.1 `questionnaire.md` di root repo (termasuk link live).
+- [x] T5.2 README.md update (link live utama `launchdesk.pages.dev`, cara deploy, envcheck).
 - [ ] T5.3 Video demo 2–3 menit + voiceover → upload YouTube (Public/Unlisted).
 - [ ] T5.4 Submit DoraHacks + kirim link video/questionnaire ke organizers.
 - [ ] T5.5 Final commit + tag, verifikasi live final.
+
+### Status live terverifikasi (Kamis 13 Agu)
+- ✅ Org CI: `https://2026-08-nashki.hackonvibe.com` — UI + `/api/*` jalan, `envcheck` → `hasOpenRouterKey: false`.
+- ✅ Akun user: `https://launchdesk.pages.dev` — UI + `/api/health`, `/api/analyze` (Duolingo → B/84), `/api/revise` (fallback 66→74).
+- ⏳ **Pending:** secret `OPENROUTER_API_KEY` + `OPENROUTER_MODEL` sudah diset di dashboard → perlu **redeploy manual** (`npm run build && npm run deploy:own`, PowerShell) agar deployment baru membacanya → `envcheck` true → `/api/revise` `source:"ai"`.
 
 ---
 
