@@ -88,6 +88,21 @@ npm run deploy:own   # deploy to your own account: project "launchdesk"
 > project as a Worker (`Missing entry-point to Worker script or to assets directory`).
 > It was intentionally removed.
 
+**Keeping your own repo in sync (optional):**
+
+The repo is mirrored to `https://github.com/ikhsanRamadhan/launchdesk` so you have
+your own copy. It does **not** auto-sync — pull the upstream changes and push them
+manually whenever the source repo updates:
+
+```bash
+git pull origin main      # pull latest from HackOnVibeCom/2026-08-nashki
+git push upstream main    # mirror to ikhsanRamadhan/launchdesk
+```
+
+> Note: a Cloudflare Pages project that is **Direct Upload** cannot be switched to
+> Git integration (per Cloudflare docs). `launchdesk.pages.dev` therefore stays a
+> manual deploy: `npm run build && npm run deploy:own`.
+
 **Enabling real AI output on your own Pages project:**
 - Set `OPENROUTER_API_KEY` (Encrypt) and `OPENROUTER_MODEL=openrouter/auto` under
   Pages → `launchdesk` → Settings → Variables and Secrets, then redeploy.

@@ -12,6 +12,8 @@ Pages (`2026-08-nashki.hackonvibe.com`) via `.github/workflows/deploy.yml`.
 **Live utama (real AI): `https://launchdesk.pages.dev`** — project Pages milik akun user
 (Direct Upload via Wrangler, bukan Git integration → perlu `npm run deploy:own` manual
 untuk tiap update). Diagnosa env: `GET /api/envcheck` → `{"hasOpenRouterKey":...}`.
+Repo mirror user: `https://github.com/ikhsanRamadhan/launchdesk` (`upstream`, **tidak auto-sync** —
+sync manual: `git pull origin main && git push upstream main`).
 
 Pipeline deploy:
 - package.json di root dengan script `build` → Node 20, `npm ci`/`npm install`, `npm run build`.
