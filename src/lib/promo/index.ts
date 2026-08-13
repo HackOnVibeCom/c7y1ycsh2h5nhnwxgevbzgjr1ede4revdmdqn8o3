@@ -25,6 +25,10 @@ export function qrCodeUrl(deepLink: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(deepLink)}`;
 }
 
+export function qrCodeUrlFallback(deepLink: string): string {
+  return `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chl=${encodeURIComponent(deepLink)}`;
+}
+
 export function smartBannerSnippet(listing: ListingData, deepLink: string): string {
   const storeLink =
     listing.platform === "apple"
@@ -34,7 +38,7 @@ export function smartBannerSnippet(listing: ListingData, deepLink: string): stri
   const metaContent =
     listing.platform === "apple"
       ? `app-id=${listing.appId}, app-argument=${deepLink}`
-      : `app-id=${listing.appId}, app-argument=${deepLink}`;
+      : `app-id=${listing.appId}`;
   return `<!-- Smart banner: add to your landing page <head> -->
 <meta name="${metaName}" content="${metaContent}" />
 <a href="${storeLink}" rel="noopener" target="_blank">Download ${listing.title}</a>`;
