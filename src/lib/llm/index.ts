@@ -30,7 +30,7 @@ function mergeRevised(listing: ListingData, revised: {
 export async function reviseListing(
   request: ReviseRequest,
   env: OpenRouterEnv,
-): Promise<{ listing: ListingData; score: ReturnType<typeof score>; source: "ai" | "fallback"; note: string }> {
+): Promise<{ listing: ListingData; score: ReturnType<typeof score>; source: "ai" | "fallback"; note: string; debug?: string }> {
   const fallback = deterministicRevise(request.listing as ListingData);
   const fallbackListing = mergeRevised(request.listing as ListingData, fallback);
   const fallbackScore = score(fallbackListing);
@@ -52,7 +52,7 @@ export async function reviseListing(
       aiScore.total > beforeScore.total &&
       aiScore.total > fallbackScore.total;
     if (!aiWins) {
-      return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note };
+      return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note, debug: `ai lost: ${aiScore.total} vs fallback ${fallbackScore.total}` };
     }
     return {
       listing: aiListing,
@@ -60,7 +60,8 @@ export async function reviseListing(
       source: "ai",
       note: parsed.data.note,
     };
-  } catch {
-    return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "LLM call failed";
+    return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note, debug: message };
   }
 }

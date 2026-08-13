@@ -92,6 +92,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       revised: result.listing,
       source: result.source,
       note: result.note,
+      debug: result.debug,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Revision failed";
