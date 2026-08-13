@@ -9,12 +9,16 @@
 **1. What does your application/service do?**
 
 LaunchDesk is an AI app-launch copilot for indie and solo mobile developers. Paste
-your App Store or Play Store link and LaunchDesk fetches the real listing, scores it
+your App Store or Play Store link and LaunchDesk fetches real listing, scores it
 against 28 deterministic ASO rules (a transparent "quality gate"), rewrites the
-listing so it clears the gate, and generates a verified promo kit — a custom deep
+listing so it clears gate, and generates verified promo kit — custom deep
 link, scannable QR code, smart-banner HTML, and per-channel publish copy (X,
-LinkedIn, Reddit, Telegram). Every output is derived from the actual app the user
-pasted — no static mock data.
+LinkedIn, Reddit, Telegram). Every output is derived from actual app user
+pasted — no static mock data. Extraction is AI-first when the OpenRouter key is
+present (AI cleans the text fields; screenshots/video always come from the real
+page), with automatic fallback to the deterministic extractor — so the demo never
+breaks. Verified live: Mobile Legends (Play) → B/83, Duolingo (Play) → B/86,
+TikTok (App Store) → A/90.
 
 **2. Who is the target audience?**
 
@@ -46,8 +50,10 @@ scoring with a rewrite loop and publishable promo assets in one free-to-try prod
 Three differentiators: (1) **A deterministic 28-rule quality gate** — every revision
 must clear a high score before it is shown, and the before→after score delta proves
 the improvement instead of just claiming it; (2) **Real integration, zero-mock** —
-the listing is fetched from the real store APIs and every artifact derives from the
-user's own app; (3) **Never breaks in a demo** — OpenRouter powers real AI output
-when a key is available, and a deterministic fallback engine keeps everything working
-with zero setup. It closes the loop: analyze → rewrite (with measured improvement) →
-launch assets.
+the listing is fetched from the real store APIs (Apple Lookup + Play Store HTML,
+including screenshots and trailer video) and every artifact derives from the
+user's own app; extraction is AI-first when a key is present — the AI cleans the
+text fields while screenshots/video always come from the real page; (3) **Never
+breaks in a demo** — OpenRouter powers real AI output when a key is available, and
+a deterministic fallback engine keeps everything working with zero setup. It
+closes the loop: analyze → rewrite (with measured improvement) → launch assets.

@@ -19,13 +19,20 @@ so every output is personally tied to the app the user pasted.
 
 ## Features
 
-1. **Paste & Grade** — fetch the real listing from the Apple Lookup API or Google
-   Play metadata, then score it against **28 deterministic ASO rules** (title,
-   subtitle, keywords, description, visual, social proof, category, metadata).
+1. **Paste & Grade** — fetch the real listing from the Apple Lookup API (retry +
+   `apps.apple.com` scrape fallback) or Google Play (locale fallback + HTML
+   extraction of screenshots/trailer video/full description/developer), scored
+   against **28 deterministic ASO rules** (title, subtitle, keywords, description,
+   visual, social proof, category, metadata).
 2. **AI Rewrite Loop** — rewrite the listing so it clears the quality gate. Uses
    OpenRouter when a key is present; otherwise a deterministic engine keeps the
    product working **zero-setup** (it never breaks in a demo).
-3. **Promo Kit** — generates a custom deep link, scannable QR code, smart-banner
+3. **AI-first extraction** — when an OpenRouter key is present, an AI pass cleans
+   the text fields (title, description, category, developer, price) from the
+   fetched page; screenshots and video URLs stay deterministic (real URLs from the
+   page, never invented). AI failure → automatic fallback to the deterministic
+   extractor.
+4. **Promo Kit** — generates a custom deep link, scannable QR code, smart-banner
    HTML snippet, and per-channel publish copy (X, LinkedIn, Reddit, Telegram).
 
 ## Stack
@@ -107,16 +114,17 @@ git push upstream main    # mirror to ikhsanRamadhan/launchdesk
 - Set `OPENROUTER_API_KEY` (Encrypt) and optionally `OPENROUTER_MODEL` (default
   `openrouter/auto`) under Pages → `launchdesk` → Settings → Variables and Secrets,
   then redeploy.
-- Verify: `GET /api/envcheck` returns `{"hasOpenRouterKey":true,...}` and
-  `POST /api/revise` returns `"source":"ai"` (currently verified live on
-  https://launchdesk.pages.dev).
+- Verify: `GET /api/envcheck` returns `{"hasOpenRouterKey":true,...}`,
+  `POST /api/revise` returns `"source":"ai"`, and `POST /api/analyze` returns
+  AI-refined listings (currently verified live on https://launchdesk.pages.dev:
+  Mobile Legends → B/83, Duolingo → B/86, TikTok → A/90).
 
 ## Project structure
 
 ```
 functions/api/    Cloudflare Pages Functions (analyze, revise, kit, health)
 src/lib/aso-rules 28 deterministic ASO rules + scorer (the quality gate)
-src/lib/extract   Apple Lookup API (retry + apps.apple.com scrape fallback) + Play Store HTML fetch (locale fallback, screenshot + trailer video extraction)
+src/lib/extract  Apple Lookup API (retry + apps.apple.com scrape fallback) + Play Store HTML fetch (locale fallback, screenshot/trailer/full-description extraction) + AI-first text refinement (ai.ts)
 src/lib/llm       OpenRouter client + deterministic fallback
 src/lib/promo     deep link / QR / smart banner / publish payload
 src/components    Landing, Analyze, Result, Revise, PromoKit
