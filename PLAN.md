@@ -137,12 +137,12 @@ Kriteria juri: *"A functional backend is valued more highly than visual aestheti
 - [x] T3.3 `PromoKit.tsx` — tab Deep Link / QR / Smart Banner / Publish Payload.
 - [x] T3.4 Commit "feat: promo kit".
 
-### Phase 4 — Dashboard, roadmap, pricing, polish ⏭ (opsional, menang-kuat, setelah Real AI)
-- [ ] T4.1 Dashboard ringkas: score gauge, aturan gagal top-5, roadmap 30/60/90 (label `Simulasi`).
-- [ ] T4.2 Pricing page/segment: Free + Pro ($6/bln) + Grading API.
-- [ ] T4.3 State flow check: "Edit listing" TIDAK me-reset state.
-- [ ] T4.4 UI polish + meta OG.
-- [ ] T4.5 Commit.
+### Phase 4 — Dashboard, roadmap, pricing, polish ✅
+- [x] T4.1 Dashboard ringkas: score gauge, aturan gagal top-5 (prioritize), roadmap 30/60/90 (label `Simulasi`).
+- [x] T4.2 Pricing page/segment: Free + Pro ($5.99/bln) + Grading API ($49/bln).
+- [x] T4.3 State flow check: "Edit listing" TIDAK me-reset state (regression test `src/store/appStore.test.ts`).
+- [x] T4.4 UI polish + meta OG (`theme-color`, `og:*`).
+- [x] T4.5 Commit "feat: dashboard + roadmap + pricing + polish".
 
 ### Phase 5 — Deliverables (sebelum cutoff Senin 10:00 WIB)
 - [x] T5.1 `questionnaire.md` di root repo (termasuk link live).
