@@ -66,6 +66,25 @@ useful revisions so the product never fails during a live demo.
 Push to `main` → GitHub Actions builds and deploys to Cloudflare Pages.
 Live at: `https://2026-08-nashki.hackonvibe.com`
 
+### Manual deploy (optional)
+
+This project is a **Cloudflare Pages** app (static `dist/` + `functions/`), not a
+Worker. When deploying manually from the Cloudflare dashboard, upload the
+**built assets** (`dist/`) to the existing **Pages** project `2026-08-nashki` —
+do not create a new Worker (that raises
+`Missing entry-point to Worker script or to assets directory`).
+
+From the CLI the correct command is:
+
+```bash
+npm run build        # produces dist/
+npm run deploy       # wrangler pages deploy dist --project-name=2026-08-nashki
+```
+
+`wrangler.jsonc` (with `pages_build_output_dir: "./dist"`) is also included, so
+the repo itself is recognized as a Pages project. The GitHub Actions pipeline
+remains the primary deployment path.
+
 ## Project structure
 
 ```
