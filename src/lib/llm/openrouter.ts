@@ -6,6 +6,7 @@ export interface OpenRouterEnv {
 }
 
 const DEFAULT_MODEL = "openrouter/auto";
+const FALLBACK_MODELS = ["poolside/laguna-s-2.1:free"];
 
 const SYSTEM_PROMPT = `You are LaunchDesk, an expert App Store Optimization (ASO) consultant.
 Rewrite the app store listing so it scores higher on our 28 deterministic ASO rules.
@@ -36,14 +37,33 @@ async function callOpenRouter(
     throw new Error("OPENROUTER_API_KEY is not configured");
   }
 
-  const body = JSON.stringify({
-    model: env.OPENROUTER_MODEL ?? DEFAULT_MODEL,
-    messages,
-    temperature: 0.4,
-    max_tokens: options?.maxTokens ?? 1600,
-    response_format: { type: "json_object" },
-  });
+  const primary = env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
+  const models = [primary, ...FALLBACK_MODELS.filter((m) => m !== primary)];
+  let lastError = new Error("OpenRouter request failed");
 
+  for (const model of models) {
+    const body = JSON.stringify({
+      model,
+      messages,
+      temperature: 0.4,
+      max_tokens: options?.maxTokens ?? 1600,
+      response_format: { type: "json_object" },
+    });
+
+    try {
+      return await attemptWithRetry(apiKey, body);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error("OpenRouter request failed");
+    }
+  }
+
+  throw lastError;
+}
+
+async function attemptWithRetry(
+  apiKey: string,
+  body: string,
+): Promise<string> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ATTEMPT_TIMEOUT_MS);
