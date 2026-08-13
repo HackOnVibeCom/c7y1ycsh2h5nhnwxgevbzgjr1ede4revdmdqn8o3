@@ -39,4 +39,22 @@ describe("revise passthrough keeps scoring data", () => {
     expect(rebuilt.rating).toBe(FULL.rating);
     expect(rebuilt.ratingCount).toBe(FULL.ratingCount);
   });
+
+  it("does not coerce missing subtitle/shortDescription to empty string", () => {
+    const playLike = { ...FULL, subtitle: undefined, shortDescription: "Short blurb", genres: undefined };
+    const parsed = ListingPatch.parse(playLike);
+    const rebuilt = toListingData(parsed);
+    expect(rebuilt.subtitle).toBeUndefined();
+    expect(rebuilt.shortDescription).toBe("Short blurb");
+    expect(score(rebuilt).total).toBe(score(playLike).total);
+  });
+
+  it("accepts null values from JSON round-trip", () => {
+    const nullish = { ...FULL, subtitle: null, genres: null };
+    const baseline = { ...FULL, subtitle: undefined, genres: undefined };
+    const parsed = ListingPatch.parse(nullish);
+    const rebuilt = toListingData(parsed);
+    expect(rebuilt.subtitle).toBeUndefined();
+    expect(score(rebuilt).total).toBe(score(baseline).total);
+  });
 });
