@@ -1,58 +1,55 @@
-import { useState } from "react";
-
-type ApiState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "ok"; message: string }
-  | { status: "error"; message: string };
+import { Landing } from "./components/Landing";
+import { Analyze } from "./components/Analyze";
+import { Result } from "./components/Result";
+import { Revise } from "./components/Revise";
+import { PromoKit } from "./components/PromoKit";
+import { useAppStore } from "./store/appStore";
 
 export function App() {
-  const [api, setApi] = useState<ApiState>({ status: "idle" });
-
-  async function checkHealth() {
-    setApi({ status: "loading" });
-    try {
-      const res = await fetch("/api/health");
-      const body = (await res.json()) as { ok: boolean };
-      setApi({
-        status: "ok",
-        message: body.ok ? "Backend functions live ✅" : "Unexpected response",
-      });
-    } catch (err) {
-      setApi({
-        status: "error",
-        message: err instanceof Error ? err.message : "Unknown error",
-      });
-    }
-  }
+  const step = useAppStore((s) => s.step);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center">
-      <p className="text-sm font-bold uppercase tracking-[0.3em] text-cyan-400">
-        LaunchDesk
-      </p>
-      <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
-        AI App Launch Copilot
-      </h1>
-      <p className="max-w-lg text-lg text-slate-300">
-        Paste your App Store or Play Store link and get a graded ASO report plus
-        a validated AI launch kit. Scaffold phase.
-      </p>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={checkHealth}
-          className="rounded-lg bg-cyan-500 px-5 py-2.5 font-semibold text-slate-950 transition hover:bg-cyan-400"
-        >
-          Test backend
-        </button>
-        <span className="text-sm text-slate-400">
-          {api.status === "idle" && "ready"}
-          {api.status === "loading" && "checking…"}
-          {api.status === "ok" && api.message}
-          {api.status === "error" && api.message}
-        </span>
-      </div>
-    </main>
+    <div className="min-h-screen">
+      <nav className="border-b border-slate-800">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+          <span className="font-extrabold tracking-tight">
+            Launch<span className="text-cyan-400">Desk</span>
+          </span>
+          <Steps current={step} />
+        </div>
+      </nav>
+
+      {step === "landing" && <Landing />}
+      {step === "analyze" && <Analyze />}
+      {step === "result" && <Result />}
+      {step === "revise" && <Revise />}
+      {step === "launch" && <PromoKit />}
+    </div>
   );
+}
+
+const ORDER = ["landing", "analyze", "result", "revise", "launch"] as const;
+
+function Steps({ current }: { current: string }) {
+  return (
+    <ol className="hidden items-center gap-2 text-xs text-slate-400 sm:flex">
+      {ORDER.map((s) => {
+        const idx = ORDER.indexOf(s as (typeof ORDER)[number]);
+        const cur = ORDER.indexOf(current as (typeof ORDER)[number]);
+        const active = cur >= idx;
+        return (
+          <li key={s} className="flex items-center gap-2">
+            {idx !== 0 && <span className="text-slate-700">/</span>}
+            <span className={active ? "font-semibold text-cyan-400" : ""}>
+              {idx + 1}.{capitalize(s)}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
