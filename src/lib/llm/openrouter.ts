@@ -45,7 +45,8 @@ async function callOpenRouter(
       temperature: 0.4,
       max_tokens: options?.maxTokens ?? 1600,
       response_format: {
- type: "json_object" },
+        type: "json_object" 
+      },
     }),
   });
 
