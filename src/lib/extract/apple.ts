@@ -101,7 +101,7 @@ async function scrapeAppleListing(appId: string): Promise<ListingData> {
     ratingCount: Number.isFinite(ratingCount) ? ratingCount : 0,
     screenshots: extractScreenshots(html),
     iconUrl: typeof ld.image === "string" ? ld.image : undefined,
-    videoUrl: undefined,
+    videoUrl: extractVideoUrl(html),
     developer: ld.author?.name ?? "",
     price,
     version: undefined,
@@ -150,17 +150,8 @@ interface ScreenshotItem {
 }
 
 function extractScreenshots(html: string): string[] {
-  const block = html.match(
-    /<script[^>]*type="application\/json"[^>]*id="serialized-server-data"[^>]*>([\s\S]*?)<\/script>/i,
-  );
-  if (!block?.[1]) return [];
-
-  let data: unknown;
-  try {
-    data = JSON.parse(block[1]);
-  } catch {
-    return [];
-  }
+  const data = parseSerializedData(html);
+  if (!data) return [];
 
   const items = findMediaScreenshots(data);
   return items
@@ -174,6 +165,46 @@ function extractScreenshots(html: string): string[] {
     })
     .filter((s): s is string => Boolean(s))
     .slice(0, 8);
+}
+
+function extractVideoUrl(html: string): string | undefined {
+  const data = parseSerializedData(html);
+  if (!data) return undefined;
+
+  let found: string | undefined;
+  const visit = (node: unknown): void => {
+    if (found) return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (!node || typeof node !== "object") return;
+
+    const obj = node as Record<string, unknown>;
+    const video = obj["video"] as { videoUrl?: string } | undefined;
+    if (typeof video?.videoUrl === "string" && video.videoUrl) {
+      found = video.videoUrl;
+      return;
+    }
+    for (const value of Object.values(obj)) {
+      visit(value);
+    }
+  };
+
+  visit(data);
+  return found;
+}
+
+function parseSerializedData(html: string): unknown {
+  const block = html.match(
+    /<script[^>]*type="application\/json"[^>]*id="serialized-server-data"[^>]*>([\s\S]*?)<\/script>/i,
+  );
+  if (!block?.[1]) return null;
+  try {
+    return JSON.parse(block[1]);
+  } catch {
+    return null;
+  }
 }
 
 function findMediaScreenshots(data: unknown): Array<{
