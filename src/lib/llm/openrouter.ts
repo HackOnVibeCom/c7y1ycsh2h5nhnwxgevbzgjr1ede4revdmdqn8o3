@@ -23,9 +23,12 @@ export interface ChatMessage {
   content: string;
 }
 
-const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+const RETRYABLE_STATUS = new Set([408, 500, 502, 503, 504]);
 const MAX_ATTEMPTS = 3;
+const MAX_429_ATTEMPTS = 6;
 const ATTEMPT_TIMEOUT_MS = 10_000;
+const RETRY_AFTER_CAP_MS = 15_000;
+const DELAYS_429 = [1000, 2000, 4000, 8000, 12_000];
 
 async function callOpenRouter(
   messages: ChatMessage[],
@@ -76,7 +79,7 @@ async function attemptWithRetry(
   body: string,
   totalSignal?: AbortSignal,
 ): Promise<string> {
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 1; attempt <= MAX_429_ATTEMPTS; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ATTEMPT_TIMEOUT_MS);
     const signal = totalSignal ? AbortSignal.any([controller.signal, totalSignal]) : controller.signal;
@@ -94,7 +97,7 @@ async function attemptWithRetry(
       });
     } catch (err) {
       clearTimeout(timer);
-      if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted) {
+      if (attempt < MAX_429_ATTEMPTS && !totalSignal?.aborted) {
         await new Promise((r) => setTimeout(r, 400 * attempt));
         continue;
       }
@@ -108,17 +111,27 @@ async function attemptWithRetry(
       };
       const content = data.choices?.[0]?.message?.content;
       if (content) return content;
-      if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted) {
+      if (attempt < MAX_429_ATTEMPTS && !totalSignal?.aborted) {
         await new Promise((r) => setTimeout(r, 400 * attempt));
         continue;
       }
       throw new Error("OpenRouter returned an empty completion");
     }
 
-    if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted && RETRYABLE_STATUS.has(res.status)) {
+    if (res.status === 429) {
+      if (attempt >= MAX_429_ATTEMPTS || totalSignal?.aborted) {
+        throw new Error(`OpenRouter responded ${res.status}`);
+      }
       const retryAfter = Number(res.headers.get("Retry-After"));
-      const delay = Number.isFinite(retryAfter) ? Math.min(retryAfter, 3000) : 400 * attempt;
+      const delay = Number.isFinite(retryAfter)
+        ? Math.min(retryAfter, RETRY_AFTER_CAP_MS)
+        : DELAYS_429[attempt - 1] ?? 12_000;
       await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted && RETRYABLE_STATUS.has(res.status)) {
+      await new Promise((r) => setTimeout(r, 400 * attempt));
       continue;
     }
     throw new Error(`OpenRouter responded ${res.status}`);

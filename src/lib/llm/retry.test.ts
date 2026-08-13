@@ -70,6 +70,45 @@ describe("callLLM retry", () => {
     expect(mock).toHaveBeenCalledTimes(2);
   });
 
+  it("retries a 429 up to 6 times then throws", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValue(new Response("rate limited", { status: 429, headers: { "Retry-After": "0" } })));
+    const mock = vi.mocked(fetch) as ReturnType<typeof vi.fn>;
+
+    await expect(callLLM([], env)).rejects.toThrow("OpenRouter responded 429");
+    expect(mock).toHaveBeenCalledTimes(12);
+  });
+
+  it("succeeds on the 4th attempt after three 429s", async () => {
+    const rateLimited = new Response("rate limited", { status: 429, headers: { "Retry-After": "0" } });
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(rateLimited)
+      .mockResolvedValueOnce(rateLimited)
+      .mockResolvedValueOnce(rateLimited)
+      .mockResolvedValueOnce(completion('{"ok":true}')));
+    const mock = vi.mocked(fetch) as ReturnType<typeof vi.fn>;
+
+    const out = await callLLM([], env);
+
+    expect(out).toBe('{"ok":true}');
+    expect(mock).toHaveBeenCalledTimes(4);
+  });
+
+  it("retries a 429 on the fallback model too", async () => {
+    const rateLimited = new Response("rate limited", { status: 429, headers: { "Retry-After": "0" } });
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response("payment required", { status: 402 }))
+      .mockResolvedValueOnce(rateLimited)
+      .mockResolvedValueOnce(rateLimited)
+      .mockResolvedValueOnce(completion('{"ok":true}')));
+    const mock = vi.mocked(fetch) as ReturnType<typeof vi.fn>;
+
+    const out = await callLLM([], env);
+
+    expect(out).toBe('{"ok":true}');
+    expect(mock).toHaveBeenCalledTimes(4);
+  });
+
   it("throws without a key", async () => {
     await expect(callLLM([], {})).rejects.toThrow("OPENROUTER_API_KEY is not configured");
   });
