@@ -23,8 +23,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return Response.json({ error: "storeUrl is required" }, { status: 400 });
   }
 
+  const env: Env = {
+    OPENROUTER_API_KEY: context.env.OPENROUTER_API_KEY,
+    OPENROUTER_MODEL: context.env.OPENROUTER_MODEL ?? "openrouter/auto",
+  };
+
   try {
-    const listing = await extractListing(parsed.data.storeUrl, context.env);
+    const listing = await extractListing(parsed.data.storeUrl, env);
     const aso = score(listing);
     return Response.json({ listing, score: aso });
   } catch (err) {
