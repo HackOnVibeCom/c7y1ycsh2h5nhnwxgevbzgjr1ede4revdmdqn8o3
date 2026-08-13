@@ -40,7 +40,7 @@ export function buildExtractDigest(listing: ListingData, html: string): string {
       developer: listing.developer ?? "",
       price: listing.price ?? "",
     },
-    pageText: text.slice(0, 6000),
+    pageText: text.slice(0, 2500),
   });
 }
 
@@ -63,7 +63,7 @@ export async function aiRefineListing(
     { role: "system", content: EXTRACT_SYSTEM_PROMPT },
     { role: "user", content: buildExtractDigest(listing, html) },
   ];
-  const raw = await callLLM(messages, env, { maxTokens: 3000 });
+  const raw = await callLLM(messages, env, { maxTokens: 1800 });
   const parsed = AiExtractSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) {
     throw new Error("AI extraction output failed schema validation");

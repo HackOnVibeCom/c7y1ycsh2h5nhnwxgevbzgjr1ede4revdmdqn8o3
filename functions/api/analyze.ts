@@ -25,13 +25,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const env: Env = {
     OPENROUTER_API_KEY: context.env.OPENROUTER_API_KEY,
-    OPENROUTER_MODEL: context.env.OPENROUTER_MODEL ?? "openrouter/auto",
+    OPENROUTER_MODEL: context.env.OPENROUTER_MODEL ?? "openrouter/auto-beta",
   };
 
   try {
-    const listing = await extractListing(parsed.data.storeUrl, env);
+    const started = Date.now();
+    const listing = await extractListing(parsed.data.storeUrl, context.env);
     const aso = score(listing);
-    return Response.json({ listing, score: aso });
+    return Response.json({
+      listing,
+      score: aso,
+      meta: { extractionMs: Date.now() - started },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Extraction failed";
     return Response.json({ error: message }, { status: 422 });

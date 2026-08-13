@@ -5,7 +5,7 @@ export interface OpenRouterEnv {
   OPENROUTER_MODEL?: string;
 }
 
-const DEFAULT_MODEL = "openrouter/auto";
+const DEFAULT_MODEL = "openrouter/auto-beta";
 const FALLBACK_MODELS = ["poolside/laguna-s-2.1:free"];
 
 const SYSTEM_PROMPT = `You are LaunchDesk, an expert App Store Optimization (ASO) consultant.
