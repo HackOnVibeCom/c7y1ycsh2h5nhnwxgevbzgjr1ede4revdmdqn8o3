@@ -34,6 +34,7 @@ export async function reviseListing(
   const fallback = deterministicRevise(request.listing as ListingData);
   const fallbackListing = mergeRevised(request.listing as ListingData, fallback);
   const fallbackScore = score(fallbackListing);
+  const beforeScore = score(request.listing as ListingData);
 
   try {
     const messages = [
@@ -47,8 +48,10 @@ export async function reviseListing(
     }
     const aiListing = mergeRevised(request.listing as ListingData, parsed.data);
     const aiScore = score(aiListing);
-    const fallbackBetters = fallbackScore.total > aiScore.total;
-    if (fallbackBetters) {
+    const aiWins =
+      aiScore.total > beforeScore.total &&
+      aiScore.total > fallbackScore.total;
+    if (!aiWins) {
       return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note };
     }
     return {
