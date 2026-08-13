@@ -83,7 +83,7 @@ describe("fetchAppleListing retry", () => {
         return new Response("forbidden", { status: 403 });
       }
       return new Response(
-        `<html><script type="application/ld+json">{"@type":"SoftwareApplication","name":"TikTok - Videos, Shop & LIVE","description":"Watch videos.","applicationCategory":"EntertainmentApplication","image":"icon.png","author":{"name":"TikTok Ltd."},"offers":{"price":0},"aggregateRating":{"ratingValue":"4.7","reviewCount":"18337831"}}</script><p class="subtitle svelte-x">Watch, discover and stream!</p></html>`,
+        `<html><script type="application/ld+json">{"@type":"SoftwareApplication","name":"TikTok - Videos, Shop & LIVE","description":"Watch videos.","applicationCategory":"EntertainmentApplication","image":"icon.png","author":{"name":"TikTok Ltd."},"offers":{"price":0},"aggregateRating":{"ratingValue":"4.7","reviewCount":"18337831"}}</script><script type="application/json" id="serialized-server-data">{"data": [{"data": {"shelfMapping": {"product_media_phone_": {"items": [{"screenshot": {"template": "https://is1-ssl.mzstatic.com/image/thumb/x/{w}x{h}{c}.{f}", "width": 1242, "height": 2688, "variants": [{"format": "jpeg"}]}}, {"screenshot": {"template": "https://is1-ssl.mzstatic.com/image/thumb/y/{w}x{h}{c}.{f}", "width": 1242, "height": 2688, "variants": [{"format": "jpeg"}]}}, {"screenshot": {"template": "https://is1-ssl.mzstatic.com/image/thumb/z/{w}x{h}{c}.{f}", "width": 1242, "height": 2688, "variants": [{"format": "jpeg"}]}}]}}}}]}</script><p class="subtitle svelte-x">Watch, discover and stream!</p></html>`,
         { status: 200 },
       );
     }));
@@ -95,6 +95,10 @@ describe("fetchAppleListing retry", () => {
     expect(out.ratingCount).toBe(18337831);
     expect(out.developer).toBe("TikTok Ltd.");
     expect(out.price).toBe("$0.00");
+    expect(out.screenshots).toHaveLength(3);
+    expect(out.screenshots[0]).toBe(
+      "https://is1-ssl.mzstatic.com/image/thumb/x/1242x2688bb.jpeg",
+    );
   });
 
   it("throws when lookup and scrape both fail", async () => {

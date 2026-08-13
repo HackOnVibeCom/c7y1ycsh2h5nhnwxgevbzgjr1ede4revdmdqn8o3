@@ -99,7 +99,7 @@ async function scrapeAppleListing(appId: string): Promise<ListingData> {
     genres: ld.applicationCategory ? [ld.applicationCategory] : [],
     rating: Number.isFinite(rating) ? rating : 0,
     ratingCount: Number.isFinite(ratingCount) ? ratingCount : 0,
-    screenshots: [],
+    screenshots: extractScreenshots(html),
     iconUrl: typeof ld.image === "string" ? ld.image : undefined,
     videoUrl: undefined,
     developer: ld.author?.name ?? "",
@@ -138,6 +138,81 @@ function decodeHtmlEntities(input: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, " ");
+}
+
+interface ScreenshotItem {
+  screenshot?: {
+    template?: string;
+    width?: number;
+    height?: number;
+    variants?: Array<{ format?: string }>;
+  };
+}
+
+function extractScreenshots(html: string): string[] {
+  const block = html.match(
+    /<script[^>]*type="application\/json"[^>]*id="serialized-server-data"[^>]*>([\s\S]*?)<\/script>/i,
+  );
+  if (!block?.[1]) return [];
+
+  let data: unknown;
+  try {
+    data = JSON.parse(block[1]);
+  } catch {
+    return [];
+  }
+
+  const items = findMediaScreenshots(data);
+  return items
+    .map(({ template, width, height, format }) => {
+      if (!template) return null;
+      return template
+        .replace("{w}", String(width ?? 1242))
+        .replace("{h}", String(height ?? 2688))
+        .replace("{c}", "bb")
+        .replace("{f}", format ?? "jpeg");
+    })
+    .filter((s): s is string => Boolean(s))
+    .slice(0, 8);
+}
+
+function findMediaScreenshots(data: unknown): Array<{
+  template?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+}> {
+  const results: Array<{
+    template?: string;
+    width?: number;
+    height?: number;
+    format?: string;
+  }> = [];
+
+  const visit = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (!node || typeof node !== "object") return;
+
+    const obj = node as Record<string, unknown>;
+    const shot = obj["screenshot"] as ScreenshotItem["screenshot"] | undefined;
+    if (shot?.template) {
+      results.push({
+        template: shot.template,
+        width: shot.width,
+        height: shot.height,
+        format: shot.variants?.[0]?.format,
+      });
+    }
+    for (const value of Object.values(obj)) {
+      visit(value);
+    }
+  };
+
+  visit(data);
+  return results;
 }
 
 export async function extractFromUrl(input: string): Promise<ListingData> {
