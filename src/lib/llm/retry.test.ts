@@ -85,7 +85,7 @@ describe("callLLM retry", () => {
     expect(out).toBe('{"ok":true}');
     expect(mock).toHaveBeenCalledTimes(2);
     const bodies = mock.mock.calls.map((c) => JSON.parse(String(c[1]?.body)));
-    expect(bodies[0].model).toBe("openrouter/auto");
+    expect(bodies[0].model).toBe("openrouter/auto-beta");
     expect(bodies[1].model).toBe("poolside/laguna-s-2.1:free");
   });
 
