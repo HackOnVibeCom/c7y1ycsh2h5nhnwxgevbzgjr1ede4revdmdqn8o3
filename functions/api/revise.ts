@@ -4,7 +4,7 @@ import type { ListingData } from "../../src/lib/aso-rules/types";
 import { reviseListing } from "../../src/lib/llm";
 import { score } from "../../src/lib/aso-rules/scorer";
 
-const ListingPatch = z.object({
+export const ListingPatch = z.object({
   platform: z.enum(["apple", "play"]),
   appId: z.string().default(""),
   storeUrl: z.string().default(""),
@@ -16,7 +16,41 @@ const ListingPatch = z.object({
   category: z.string().optional(),
   developer: z.string().optional(),
   price: z.string().optional(),
+  genres: z.array(z.string()).optional(),
+  rating: z.number().optional(),
+  ratingCount: z.number().optional(),
+  screenshots: z.array(z.string()).optional(),
+  iconUrl: z.string().optional(),
+  videoUrl: z.string().optional(),
+  releaseNotes: z.string().optional(),
+  version: z.string().optional(),
 });
+
+export type ListingPatchType = z.infer<typeof ListingPatch>;
+
+export function toListingData(l: ListingPatchType): ListingData {
+  return {
+    platform: l.platform,
+    appId: l.appId,
+    storeUrl: l.storeUrl,
+    title: l.title,
+    subtitle: l.subtitle ?? "",
+    shortDescription: l.shortDescription ?? "",
+    description: l.description,
+    keywords: l.keywords ?? "",
+    category: l.category ?? "",
+    developer: l.developer ?? "",
+    price: l.price,
+    genres: l.genres ?? [],
+    rating: l.rating,
+    ratingCount: l.ratingCount,
+    screenshots: l.screenshots ?? [],
+    iconUrl: l.iconUrl,
+    videoUrl: l.videoUrl,
+    releaseNotes: l.releaseNotes,
+    version: l.version,
+  };
+}
 
 const Body = z.object({
   listing: ListingPatch,
@@ -42,22 +76,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   const p = parsed.data;
-  const before: ListingData = {
-    platform: p.listing.platform,
-    appId: p.listing.appId,
-    storeUrl: p.listing.storeUrl,
-    title: p.listing.title,
-    subtitle: p.listing.subtitle ?? "",
-    shortDescription: p.listing.shortDescription ?? "",
-    description: p.listing.description,
-    keywords: p.listing.keywords ?? "",
-    category: p.listing.category ?? "",
-    developer: p.listing.developer ?? "",
-    price: p.listing.price,
-    screenshots: [],
-    rating: 0,
-    ratingCount: 0,
-  };
+  const before = toListingData(p.listing);
   const beforeScore = score(before);
 
   const env: Env = {
