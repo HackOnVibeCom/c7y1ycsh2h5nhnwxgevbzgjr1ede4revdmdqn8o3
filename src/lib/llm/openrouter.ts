@@ -30,7 +30,7 @@ const ATTEMPT_TIMEOUT_MS = 10_000;
 async function callOpenRouter(
   messages: ChatMessage[],
   env: OpenRouterEnv,
-  options?: { maxTokens?: number },
+  options?: { maxTokens?: number; totalTimeoutMs?: number },
 ): Promise<string> {
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -40,6 +40,13 @@ async function callOpenRouter(
   const primary = env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
   const models = [primary, ...FALLBACK_MODELS.filter((m) => m !== primary)];
   let lastError = new Error("OpenRouter request failed");
+  const totalController = new AbortController();
+
+  const totalTimer = options?.totalTimeoutMs
+    ? setTimeout(() => {
+        totalController.abort();
+      }, options.totalTimeoutMs)
+    : null;
 
   for (const model of models) {
     const body = JSON.stringify({
@@ -50,23 +57,29 @@ async function callOpenRouter(
       response_format: { type: "json_object" },
     });
 
-    try {
-      return await attemptWithRetry(apiKey, body);
+  try {
+      const result = await attemptWithRetry(apiKey, body, totalController.signal);
+      if (totalTimer) clearTimeout(totalTimer);
+      return result;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error("OpenRouter request failed");
+      if (totalController.signal.aborted) break;
     }
   }
 
+  if (totalTimer) clearTimeout(totalTimer);
   throw lastError;
 }
 
 async function attemptWithRetry(
   apiKey: string,
   body: string,
+  totalSignal?: AbortSignal,
 ): Promise<string> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ATTEMPT_TIMEOUT_MS);
+    const signal = totalSignal ? AbortSignal.any([controller.signal, totalSignal]) : controller.signal;
     let res: Response;
     try {
       res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -77,11 +90,11 @@ async function attemptWithRetry(
           "X-Title": "LaunchDesk",
         },
         body,
-        signal: controller.signal,
+        signal,
       });
     } catch (err) {
       clearTimeout(timer);
-      if (attempt < MAX_ATTEMPTS) {
+      if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted) {
         await new Promise((r) => setTimeout(r, 400 * attempt));
         continue;
       }
@@ -95,14 +108,14 @@ async function attemptWithRetry(
       };
       const content = data.choices?.[0]?.message?.content;
       if (content) return content;
-      if (attempt < MAX_ATTEMPTS) {
+      if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted) {
         await new Promise((r) => setTimeout(r, 400 * attempt));
         continue;
       }
       throw new Error("OpenRouter returned an empty completion");
     }
 
-    if (attempt < MAX_ATTEMPTS && RETRYABLE_STATUS.has(res.status)) {
+    if (attempt < MAX_ATTEMPTS && !totalSignal?.aborted && RETRYABLE_STATUS.has(res.status)) {
       const retryAfter = Number(res.headers.get("Retry-After"));
       const delay = Number.isFinite(retryAfter) ? Math.min(retryAfter, 3000) : 400 * attempt;
       await new Promise((r) => setTimeout(r, delay));
@@ -117,7 +130,7 @@ async function attemptWithRetry(
 export async function callLLM(
   messages: ChatMessage[],
   env: OpenRouterEnv,
-  options?: { maxTokens?: number },
+  options?: { maxTokens?: number; totalTimeoutMs?: number },
 ): Promise<string> {
   return callOpenRouter(messages, env, options);
 }
