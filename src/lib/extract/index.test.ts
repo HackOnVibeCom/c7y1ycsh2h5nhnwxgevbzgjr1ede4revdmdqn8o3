@@ -20,6 +20,19 @@ describe("parseStoreUrl", () => {
     expect(parseStoreUrl("https://play.google.com/store/apps/details?id=com.acme.habit&hl=en")).toEqual({
       platform: "play",
       appId: "com.acme.habit",
+      query: { hl: "en" },
+    });
+  });
+
+  it("extracts hl and gl from Play Store URL", () => {
+    expect(
+      parseStoreUrl(
+        "https://play.google.com/store/apps/details?id=com.mobile.legends&hl=id_ID&gl=LA",
+      ),
+    ).toEqual({
+      platform: "play",
+      appId: "com.mobile.legends",
+      query: { hl: "id_ID", gl: "LA" },
     });
   });
 

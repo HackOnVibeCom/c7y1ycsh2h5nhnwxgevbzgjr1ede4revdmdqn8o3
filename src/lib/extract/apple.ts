@@ -21,7 +21,7 @@ interface AppleResult {
 
 export async function fetchAppleListing(appId: string): Promise<ListingData> {
   const url = `https://itunes.apple.com/lookup?id=${appId}&country=US&entity=software`;
-  const res = await fetch(url);
+  const res = await fetchWithRetry(url);
   if (!res.ok) {
     throw new Error(`Apple Lookup API responded ${res.status}`);
   }
@@ -63,4 +63,21 @@ export async function extractFromUrl(input: string): Promise<ListingData> {
     throw new Error("Expected an Apple App Store link.");
   }
   return fetchAppleListing(parsed.appId);
+}
+
+const RETRYABLE_STATUS = new Set([403, 429, 500, 502, 503, 504]);
+const RETRY_DELAY_MS = 400;
+const MAX_ATTEMPTS = 3;
+
+async function fetchWithRetry(url: string, attempt = 1): Promise<Response> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)",
+    },
+  });
+  if (res.ok || attempt >= MAX_ATTEMPTS || !RETRYABLE_STATUS.has(res.status)) {
+    return res;
+  }
+  await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+  return fetchWithRetry(url, attempt + 1);
 }

@@ -1,5 +1,5 @@
 import type { ListingData } from "../aso-rules/types";
-import { parseStoreUrl } from "./index";
+import { parseStoreUrl, type StoreQuery } from "./index";
 
 interface PlayJsonLd {
   name?: string;
@@ -39,17 +39,41 @@ function decodeHtmlEntities(input: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
-export async function fetchPlayListing(appId: string): Promise<ListingData> {
-  const url = `https://play.google.com/store/apps/details?id=${appId}&hl=en&gl=US`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)" },
-  });
-  if (!res.ok) {
+const FALLBACK_LOCALES: Array<{ hl: string; gl: string }> = [
+  { hl: "id_ID", gl: "ID" },
+  { hl: "en", gl: "LA" },
+  { hl: "en", gl: "MY" },
+  { hl: "en", gl: "GB" },
+  { hl: "en", gl: "US" },
+];
+
+export async function fetchPlayListing(
+  appId: string,
+  query?: StoreQuery,
+): Promise<ListingData> {
+  const candidates = buildLocaleCandidates(query);
+  let lastHtml: string | null = null;
+  let lastUrl = "";
+
+  for (const { hl, gl } of candidates) {
+    const url = `https://play.google.com/store/apps/details?id=${appId}&hl=${hl}&gl=${gl}`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)" },
+    });
+    if (res.ok) {
+      lastHtml = await res.text();
+      lastUrl = url;
+      break;
+    }
+    if (res.status === 404) continue;
     throw new Error(`Play Store responded ${res.status}`);
   }
-  const html = await res.text();
 
-  const ld = parseLdJson(html);
+  if (!lastHtml) {
+    throw new Error(`Play Store responded 404`);
+  }
+
+  const ld = parseLdJson(lastHtml);
 
   if (!ld?.name) {
     throw new Error("Could not read this Play Store listing. Try an Apple App Store link instead.");
@@ -67,7 +91,7 @@ export async function fetchPlayListing(appId: string): Promise<ListingData> {
   return {
     platform: "play",
     appId,
-    storeUrl: url,
+    storeUrl: lastUrl,
     title: ld.name ?? "",
     shortDescription,
     description,
@@ -81,6 +105,21 @@ export async function fetchPlayListing(appId: string): Promise<ListingData> {
     price,
     version: ld.version,
   };
+}
+
+function buildLocaleCandidates(query?: StoreQuery): Array<{ hl: string; gl: string }> {
+  if (query?.hl || query?.gl) {
+    const user: { hl: string; gl: string } = {
+      hl: query.hl ?? "en",
+      gl: query.gl ?? "US",
+    };
+    const unique = new Set([`${user.hl}/${user.gl}`]);
+    const rest = FALLBACK_LOCALES.filter(
+      (l) => !unique.has(`${l.hl}/${l.gl}`),
+    );
+    return [user, ...rest];
+  }
+  return FALLBACK_LOCALES;
 }
 
 export async function extractFromUrl(input: string): Promise<ListingData> {
