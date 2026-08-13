@@ -1,6 +1,6 @@
 # PLAN.md — LaunchDesk (HackOnVibe August 2026, Global Impact)
 
-> Status: **live, real-AI pending redeploy** · Updated: 2026-08-13 · Author: solo (Ikhsandadan)
+> Status: **live, Real AI VERIFIED** · Updated: 2026-08-13 · Author: solo (Ikhsandadan)
 > Target: **Juara 1 Track Global Impact** · Deadline hard cutoff: **Senin 17 Agu 2026 10:00 WIB**
 
 ---
@@ -124,7 +124,7 @@ Kriteria juri: *"A functional backend is valued more highly than visual aestheti
 - [x] T1.5 `src/store/appStore.ts` — Zustand persist `launchdesk-state-v1`.
 - [x] T1.6 Commit "feat: 28-rule aso engine + real listing fetch + analyze api".
 
-### Phase 2 — AI revise loop ✅ (kode; verifikasi AI live via launchdesk.pages.dev pending)
+### Phase 2 — AI revise loop ✅
 - [x] T2.1 `llm/openrouter.ts` — call OpenRouter (`openrouter/auto`), system prompt + zod output.
 - [x] T2.2 `llm/fallback.ts` — deterministic revision (jalan tanpa key).
 - [x] T2.3 `llm/index.ts` — `reviseListing(...)` try LLM → catch → fallback.
@@ -132,6 +132,7 @@ Kriteria juri: *"A functional backend is valued more highly than visual aestheti
 - [x] T2.5 `Revise.tsx` — UI diff before/after + label `Real AI`/`Deterministic` + re-score.
 - [x] T2.6 TDD: revise unit test (fallback + LLM mock).
 - [x] T2.7 Commit "feat: ai revise loop with deterministic fallback".
+- [x] **T2.8 Verifikasi live**: `launchdesk.pages.dev/api/revise` → `source:"ai"`, Duolingo C 66 → B 77. ✅
 
 ### Phase 3 — Promo kit ✅
 - [x] T3.1 `lib/promo/index.ts` — deepLink, QR, smartBanner, payload (+ unit tests).
@@ -154,9 +155,10 @@ Kriteria juri: *"A functional backend is valued more highly than visual aestheti
 - [ ] T5.5 Final commit + tag, verifikasi live final.
 
 ### Status live terverifikasi (Kamis 13 Agu)
-- ✅ Org CI: `https://2026-08-nashki.hackonvibe.com` — UI + `/api/*` jalan, `envcheck` → `hasOpenRouterKey: false`.
-- ✅ Akun user: `https://launchdesk.pages.dev` — UI + `/api/health`, `/api/analyze` (Duolingo → B/84), `/api/revise` (fallback 66→74).
-- ⏳ **Pending:** secret `OPENROUTER_API_KEY` + `OPENROUTER_MODEL` sudah diset di dashboard → perlu **redeploy manual** (`npm run build && npm run deploy:own`, PowerShell) agar deployment baru membacanya → `envcheck` true → `/api/revise` `source:"ai"`.
+- ✅ **`launchdesk.pages.dev` — Real AI VERIFIED**: `/api/envcheck` → `{"hasOpenRouterKey":true}`, `/api/revise` → `source:"ai"` (Duolingo C 66 → B 77). Ini link demo utama untuk submission.
+- ✅ Org CI: `https://2026-08-nashki.hackonvibe.com` — UI + `/api/*` jalan, `envcheck` → `hasOpenRouterKey: false` (org domain memang tak punya secret; wajar). Jangan verifikasi real-AI di sini.
+- ✅ Fix: `revise.ts` kini pakai `OPENROUTER_MODEL` dari env (default `openrouter/auto`), tidak lagi hardcode `auto-beta`.
+- ⏳ Sisa: video demo (T5.3), submit DoraHacks (T5.4), final tag (T5.5).
 
 ---
 
