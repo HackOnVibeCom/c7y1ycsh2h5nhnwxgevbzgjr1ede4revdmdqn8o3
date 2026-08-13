@@ -84,7 +84,8 @@ export async function fetchPlayListing(
 
   const rating = Number(ld.aggregateRating?.ratingValue ?? 0);
   const ratingCount = Number(ld.aggregateRating?.ratingCount ?? 0);
-  const screenshots = ld.screenshot ?? [];
+  const htmlShots = extractPlayScreenshots(lastHtml);
+  const screenshots = htmlShots.length > 0 ? htmlShots : (ld.screenshot ?? []);
 
   const price = ld.offers?.price !== undefined ? `$${Number(ld.offers.price).toFixed(2)}` : "Free";
 
@@ -100,11 +101,28 @@ export async function fetchPlayListing(
     ratingCount: Number.isFinite(ratingCount) ? ratingCount : 0,
     screenshots,
     iconUrl: typeof ld.image === "string" ? ld.image : undefined,
-    videoUrl: undefined,
+    videoUrl: extractTrailerUrl(lastHtml),
     developer: ld.publisher?.name ?? "",
     price,
     version: ld.version,
   };
+}
+
+function extractPlayScreenshots(html: string): string[] {
+  const urls: string[] = [];
+  const imgRe = /<img[^>]*alt="Screenshot image"[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = imgRe.exec(html)) !== null) {
+    const src = m[0].match(/src="([^"]+)"/);
+    if (src?.[1]) urls.push(src[1]);
+  }
+  return [...new Set(urls)].slice(0, 8);
+}
+
+function extractTrailerUrl(html: string): string | undefined {
+  const m = html.match(/data-trailer-url="([^"]+)"/);
+  if (!m?.[1]) return undefined;
+  return m[1].replace(/&amp;/g, "&");
 }
 
 function buildLocaleCandidates(query?: StoreQuery): Array<{ hl: string; gl: string }> {
