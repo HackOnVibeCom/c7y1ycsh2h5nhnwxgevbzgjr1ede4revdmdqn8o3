@@ -3,7 +3,7 @@ import { useAppStore } from "../store/appStore";
 import type { AsoScore, ListingData } from "../lib/aso-rules/types";
 
 export function Analyze() {
-  const { storeUrl, setStoreUrl, applyAnalysis, setLoading, setError, loading, error } =
+  const { storeUrl, setStoreUrl, applyAnalysis, setLoading, setError, error } =
     useAppStore();
 
   const [submitting, setSubmitting] = useState<boolean>(false);

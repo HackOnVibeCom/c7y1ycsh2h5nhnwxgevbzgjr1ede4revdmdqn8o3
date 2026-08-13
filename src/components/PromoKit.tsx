@@ -35,7 +35,7 @@ export function PromoKit() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ listing }),
     })
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<KitResponse | { error: string }>)
       .then((body) => {
         if ("deepLink" in body) setKit(body as KitResponse);
       })

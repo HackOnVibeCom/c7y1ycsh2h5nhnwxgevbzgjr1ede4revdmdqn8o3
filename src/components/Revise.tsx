@@ -19,7 +19,6 @@ export function Revise() {
     setStep,
     setLoading,
     setError,
-    loading,
     error,
   } = useAppStore();
   const [working, setWorking] = useState<boolean>(false);
@@ -72,13 +71,15 @@ export function Revise() {
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-cyan-400">Step 3 · Revise</p>
           <h2 className="mt-2 text-3xl font-extrabold">AI rewrite loop</h2>
         </div>
-        {(result ?? { after: score }) && result ? (
-          <ScoreDial score={result.after} />
-        ) : score ? (
-          <ScoreDial score={score} />
-        ) : (
-          <span className="text-sm text-slate-500">no score yet</span>
-        )}
+        <div className="flex items-center gap-2">
+          {score && result ? (
+            <>
+              <span className="text-sm font-semibold text-slate-400">before {result.before.total}</span>
+              <span className="text-slate-500">→</span>
+            </>
+          ) : null}
+          {result ? <ScoreDial score={result.after} /> : score ? <ScoreDial score={score} /> : <span className="text-sm text-slate-500">no score yet</span>}
+        </div>
       </div>
 
       {!result && (

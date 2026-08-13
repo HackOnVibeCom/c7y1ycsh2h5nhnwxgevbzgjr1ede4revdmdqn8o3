@@ -1,7 +1,5 @@
 import type { ListingData } from "../aso-rules/types";
 
-const ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
