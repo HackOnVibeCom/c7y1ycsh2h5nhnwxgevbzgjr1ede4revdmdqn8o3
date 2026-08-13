@@ -36,18 +36,27 @@ function extractPlayQuery(url: string): StoreQuery | undefined {
   return hl || gl ? { hl, gl } : undefined;
 }
 
+export interface ExtractionResult {
+  listing: ListingData;
+  source: "ai" | "fallback";
+}
+
 export async function extractListing(
   input: string,
   env?: OpenRouterEnv,
-): Promise<ListingData> {
+): Promise<ExtractionResult> {
   const parsed = parseStoreUrl(input);
   if (!parsed) {
     throw new Error("Could not parse the store URL. Use an App Store or Play Store link.");
   }
+  let listing: ListingData;
   if (parsed.platform === "apple") {
     const { fetchAppleListing } = await import("./apple");
-    return fetchAppleListing(parsed.appId, env);
+    listing = await fetchAppleListing(parsed.appId, env);
+  } else {
+    const { fetchPlayListing } = await import("./play");
+    listing = await fetchPlayListing(parsed.appId, parsed.query, env);
   }
-  const { fetchPlayListing } = await import("./play");
-  return fetchPlayListing(parsed.appId, parsed.query, env);
+  const { consumeAiRefined } = await import("./ai");
+  return { listing, source: consumeAiRefined() ? "ai" : "fallback" };
 }

@@ -34,7 +34,10 @@ export async function reviseListing(
   const fallback = deterministicRevise(request.listing as ListingData);
   const fallbackListing = mergeRevised(request.listing as ListingData, fallback);
   const fallbackScore = score(fallbackListing);
-  const beforeScore = score(request.listing as ListingData);
+
+  if (!env.OPENROUTER_API_KEY) {
+    return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note, debug: "no API key" };
+  }
 
   try {
     const messages = [
@@ -48,12 +51,6 @@ export async function reviseListing(
     }
     const aiListing = mergeRevised(request.listing as ListingData, parsed.data);
     const aiScore = score(aiListing);
-    const aiWins =
-      aiScore.total > beforeScore.total &&
-      aiScore.total > fallbackScore.total;
-    if (!aiWins) {
-      return { listing: fallbackListing, score: fallbackScore, source: "fallback", note: fallback.note, debug: `ai lost: ${aiScore.total} vs fallback ${fallbackScore.total}` };
-    }
     return {
       listing: aiListing,
       score: aiScore,

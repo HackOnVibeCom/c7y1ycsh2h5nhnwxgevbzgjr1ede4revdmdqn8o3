@@ -128,7 +128,7 @@ describe("reviseListing", () => {
     expect(["A", "B", "C", "D", "F"]).toContain(result.score.grade);
   });
 
-  it("uses AI only when it beats both before and fallback", async () => {
+  it("uses AI result whenever the LLM succeeds (strict AI)", async () => {
     const env = { OPENROUTER_API_KEY: "key" };
     const base = listing();
     const good = JSON.parse(aiJson({
@@ -139,19 +139,14 @@ describe("reviseListing", () => {
 
     const result = await reviseListing({ listing: base, targetScore: 90 }, env);
 
-    const beforeScore = score(base);
-    const fb = mergeFields(base, deterministicRevise(base));
-    const fallbackScore = score(fb);
     const aiListing = mergeFields(base, good);
     const aiScore = score(aiListing);
 
-    expect(aiScore.total).toBeGreaterThan(beforeScore.total);
-    expect(aiScore.total).toBeGreaterThan(fallbackScore.total);
     expect(result.source).toBe("ai");
     expect(result.score.total).toBe(aiScore.total);
   });
 
-  it("falls back when AI beats fallback but loses to before", async () => {
+  it("still uses the AI result even when it loses to fallback (strict AI)", async () => {
     const env = { OPENROUTER_API_KEY: "key" };
     const strong = listing({
       title: "Habit Tracker",
@@ -171,15 +166,10 @@ describe("reviseListing", () => {
 
     const result = await reviseListing({ listing: strong, targetScore: 90 }, env);
 
-    const beforeScore = score(strong);
-    const aiListing = mergeFields(strong, weakAi);
-    const aiScore = score(aiListing);
-
-    expect(aiScore.total).toBeLessThan(beforeScore.total);
-    expect(result.source).toBe("fallback");
+    expect(result.source).toBe("ai");
   });
 
-  it("falls back when AI loses to fallback", async () => {
+  it("still uses the AI result even when it loses to before (strict AI)", async () => {
     const env = { OPENROUTER_API_KEY: "key" };
     const base = listing();
     const weakAi = JSON.parse(aiJson({
@@ -192,12 +182,6 @@ describe("reviseListing", () => {
 
     const result = await reviseListing({ listing: base, targetScore: 90 }, env);
 
-    const fb = mergeFields(base, deterministicRevise(base));
-    const fallbackScore = score(fb);
-    const aiListing = mergeFields(base, weakAi);
-    const aiScore = score(aiListing);
-
-    expect(aiScore.total).toBeLessThan(fallbackScore.total);
-    expect(result.source).toBe("fallback");
+    expect(result.source).toBe("ai");
   });
 });

@@ -54,6 +54,14 @@ const mergeTextFields = (base: ListingData, ai: AiExtract): ListingData => ({
   price: ai.price,
 });
 
+let aiRefinedFlag = false;
+
+export function consumeAiRefined(): boolean {
+  const value = aiRefinedFlag;
+  aiRefinedFlag = false;
+  return value;
+}
+
 export async function aiRefineListing(
   listing: ListingData,
   html: string,
@@ -63,10 +71,11 @@ export async function aiRefineListing(
     { role: "system", content: EXTRACT_SYSTEM_PROMPT },
     { role: "user", content: buildExtractDigest(listing, html) },
   ];
-  const raw = await callLLM(messages, env, { maxTokens: 1800, totalTimeoutMs: 12_000 });
+  const raw = await callLLM(messages, env, { maxTokens: 1800, totalTimeoutMs: 25_000 });
   const parsed = AiExtractSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) {
     throw new Error("AI extraction output failed schema validation");
   }
+  aiRefinedFlag = true;
   return mergeTextFields(listing, parsed.data);
 }

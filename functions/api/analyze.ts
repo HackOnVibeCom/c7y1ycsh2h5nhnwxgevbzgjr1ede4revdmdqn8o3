@@ -25,12 +25,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   try {
     const started = Date.now();
-    const listing = await extractListing(parsed.data.storeUrl, context.env);
+    const { listing, source } = await extractListing(parsed.data.storeUrl, context.env);
     const aso = score(listing);
     return Response.json({
       listing,
       score: aso,
-      meta: { extractionMs: Date.now() - started },
+      meta: { extractionMs: Date.now() - started, source },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Extraction failed";
