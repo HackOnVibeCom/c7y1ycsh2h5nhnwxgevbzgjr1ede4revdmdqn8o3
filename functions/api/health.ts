@@ -1,6 +1,4 @@
-interface Env {
-  OPENROUTER_API_KEY?: string;
-}
+import type { Env } from "../_lib/env";
 
 export const onRequest: PagesFunction<Env> = async () => {
   return Response.json({
