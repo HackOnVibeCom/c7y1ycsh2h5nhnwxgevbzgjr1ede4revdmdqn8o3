@@ -1,4 +1,5 @@
 import type { ListingData, Platform } from "../aso-rules/types";
+import type { OpenRouterEnv } from "../llm/openrouter";
 
 const APPLE_RE =
   /^https?:\/\/(?:apps|itunes)\.apple\.com\/(?:[\w-]+\/)?app\/[\w-]*\/?id(\d+)/i;
@@ -35,15 +36,18 @@ function extractPlayQuery(url: string): StoreQuery | undefined {
   return hl || gl ? { hl, gl } : undefined;
 }
 
-export async function extractListing(input: string): Promise<ListingData> {
+export async function extractListing(
+  input: string,
+  env?: OpenRouterEnv,
+): Promise<ListingData> {
   const parsed = parseStoreUrl(input);
   if (!parsed) {
     throw new Error("Could not parse the store URL. Use an App Store or Play Store link.");
   }
   if (parsed.platform === "apple") {
     const { fetchAppleListing } = await import("./apple");
-    return fetchAppleListing(parsed.appId);
+    return fetchAppleListing(parsed.appId, env);
   }
   const { fetchPlayListing } = await import("./play");
-  return fetchPlayListing(parsed.appId, parsed.query);
+  return fetchPlayListing(parsed.appId, parsed.query, env);
 }

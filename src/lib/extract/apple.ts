@@ -1,5 +1,7 @@
 import type { ListingData } from "../aso-rules/types";
 import { parseStoreUrl } from "./index";
+import { aiRefineListing } from "./ai";
+import type { OpenRouterEnv } from "../llm/openrouter";
 
 interface AppleResult {
   trackId?: number;
@@ -19,11 +21,14 @@ interface AppleResult {
   version?: string;
 }
 
-export async function fetchAppleListing(appId: string): Promise<ListingData> {
+export async function fetchAppleListing(
+  appId: string,
+  env?: OpenRouterEnv,
+): Promise<ListingData> {
   const url = `https://itunes.apple.com/lookup?id=${appId}&country=US&entity=software`;
   const res = await fetchWithRetry(url);
   if (!res.ok) {
-    return scrapeAppleListing(appId);
+    return scrapeAppleListing(appId, env);
   }
   const data = (await res.json()) as { resultCount: number; results: AppleResult[] };
   const app = data.results[0];
@@ -34,7 +39,7 @@ export async function fetchAppleListing(appId: string): Promise<ListingData> {
 
   const storeUrl = app.trackViewUrl ?? `https://apps.apple.com/app/id${appId}`;
 
-  return {
+  const listing: ListingData = {
     platform: "apple",
     appId,
     storeUrl,
@@ -52,6 +57,20 @@ export async function fetchAppleListing(appId: string): Promise<ListingData> {
     price: app.formattedPrice,
     version: app.version,
   };
+
+  if (!env?.OPENROUTER_API_KEY) return listing;
+  try {
+    const html = await fetch(app.trackViewUrl ?? storeUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)" },
+    })
+      .then((r) => r.text())
+      .catch(() => "");
+    return html
+      ? await aiRefineListing(listing, html, env)
+      : listing;
+  } catch {
+    return listing;
+  }
 }
 
 interface ScrapeLd {
@@ -64,7 +83,10 @@ interface ScrapeLd {
   aggregateRating?: { ratingValue?: string | number; reviewCount?: string | number };
 }
 
-async function scrapeAppleListing(appId: string): Promise<ListingData> {
+async function scrapeAppleListing(
+  appId: string,
+  env?: OpenRouterEnv,
+): Promise<ListingData> {
   const pageUrl = `https://apps.apple.com/us/app/id${appId}`;
   const res = await fetch(pageUrl, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)" },
@@ -81,14 +103,14 @@ async function scrapeAppleListing(appId: string): Promise<ListingData> {
 
   const description = decodeHtmlEntities(ld.description ?? "");
   const subtitle = extractSubtitle(html);
-  const rating = Number(ld.aggregateRating?.ratingValue ?? 0);
+  const rating = Math.round(Number(ld.aggregateRating?.ratingValue ?? 0) * 10) / 10;
   const ratingCount = Number(ld.aggregateRating?.reviewCount ?? 0);
   const price =
     ld.offers?.price !== undefined
       ? `$${Number(ld.offers.price).toFixed(2)}`
       : undefined;
 
-  return {
+  const listing: ListingData = {
     platform: "apple",
     appId,
     storeUrl: pageUrl,
@@ -106,6 +128,13 @@ async function scrapeAppleListing(appId: string): Promise<ListingData> {
     price,
     version: undefined,
   };
+
+  if (!env?.OPENROUTER_API_KEY) return listing;
+  try {
+    return await aiRefineListing(listing, html, env);
+  } catch {
+    return listing;
+  }
 }
 
 function parseSoftwareApplicationLd(html: string): ScrapeLd | null {

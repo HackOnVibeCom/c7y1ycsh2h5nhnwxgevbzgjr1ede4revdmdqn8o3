@@ -25,6 +25,7 @@ export interface ChatMessage {
 async function callOpenRouter(
   messages: ChatMessage[],
   env: OpenRouterEnv,
+  options?: { maxTokens?: number },
 ): Promise<string> {
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -42,8 +43,9 @@ async function callOpenRouter(
       model: env.OPENROUTER_MODEL ?? DEFAULT_MODEL,
       messages,
       temperature: 0.4,
-      max_tokens: 1600,
-      response_format: { type: "json_object" },
+      max_tokens: options?.maxTokens ?? 1600,
+      response_format: {
+ type: "json_object" },
     }),
   });
 
@@ -64,8 +66,9 @@ async function callOpenRouter(
 export async function callLLM(
   messages: ChatMessage[],
   env: OpenRouterEnv,
+  options?: { maxTokens?: number },
 ): Promise<string> {
-  return callOpenRouter(messages, env);
+  return callOpenRouter(messages, env, options);
 }
 
 export { SYSTEM_PROMPT };

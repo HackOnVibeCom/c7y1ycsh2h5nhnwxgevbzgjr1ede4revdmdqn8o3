@@ -1,5 +1,7 @@
 import type { ListingData } from "../aso-rules/types";
 import { parseStoreUrl, type StoreQuery } from "./index";
+import type { OpenRouterEnv } from "../llm/openrouter";
+import { aiRefineListing } from "./ai";
 
 interface PlayJsonLd {
   name?: string;
@@ -10,6 +12,7 @@ interface PlayJsonLd {
   screenshot?: string[];
   image?: string;
   publisher?: { name?: string };
+  author?: string | { name?: string };
   url?: string;
   version?: string;
   interactionStatistic?: Array<{ interactionType?: string; userInteractionCount?: string | number }>;
@@ -50,6 +53,7 @@ const FALLBACK_LOCALES: Array<{ hl: string; gl: string }> = [
 export async function fetchPlayListing(
   appId: string,
   query?: StoreQuery,
+  env?: OpenRouterEnv,
 ): Promise<ListingData> {
   const candidates = buildLocaleCandidates(query);
   let lastHtml: string | null = null;
@@ -79,33 +83,82 @@ export async function fetchPlayListing(
     throw new Error("Could not read this Play Store listing. Try an Apple App Store link instead.");
   }
 
-  const description = decodeHtmlEntities(ld.description ?? "");
-  const shortDescription = description.split("\n")[0]?.slice(0, 100) ?? "";
+  const fullDescription = extractFullDescription(lastHtml, decodeHtmlEntities(ld.description ?? ""));
+  const shortDescription = decodeHtmlEntities(ld.description ?? "")
+    .split("\n")[0]
+    ?.slice(0, 100) ?? "";
 
-  const rating = Number(ld.aggregateRating?.ratingValue ?? 0);
+  const rating = Math.round(Number(ld.aggregateRating?.ratingValue ?? 0) * 10) / 10;
   const ratingCount = Number(ld.aggregateRating?.ratingCount ?? 0);
   const htmlShots = extractPlayScreenshots(lastHtml);
   const screenshots = htmlShots.length > 0 ? htmlShots : (ld.screenshot ?? []);
 
   const price = ld.offers?.price !== undefined ? `$${Number(ld.offers.price).toFixed(2)}` : "Free";
+  const developer = extractDeveloper(lastHtml, ld);
 
-  return {
+  const listing: ListingData = {
     platform: "play",
     appId,
     storeUrl: lastUrl,
     title: ld.name ?? "",
     shortDescription,
-    description,
+    description: fullDescription,
     category: ld.applicationCategory ?? "",
     rating: Number.isFinite(rating) ? rating : 0,
     ratingCount: Number.isFinite(ratingCount) ? ratingCount : 0,
     screenshots,
     iconUrl: typeof ld.image === "string" ? ld.image : undefined,
     videoUrl: extractTrailerUrl(lastHtml),
-    developer: ld.publisher?.name ?? "",
+    developer,
     price,
     version: ld.version,
   };
+
+  if (!env?.OPENROUTER_API_KEY) return listing;
+  try {
+    return await aiRefineListing(listing, lastHtml, env);
+  } catch {
+    return listing;
+  }
+}
+
+function extractFullDescription(html: string, fallback: string): string {
+  const start = html.search(/data-g-id="description"/);
+  if (start === -1) return fallback;
+  const open = html.lastIndexOf("<div", start);
+  if (open === -1) return fallback;
+
+  const tagRe = /<div\b[^>]*>|<\/div\s*>/g;
+  let depth = 0;
+  let end = -1;
+  let m: RegExpExecArray | null;
+  const window = html.slice(open, open + 100000);
+  while ((m = tagRe.exec(window)) !== null) {
+    if (m[0].startsWith("</div")) {
+      depth -= 1;
+      if (depth === 0) {
+        end = open + m.index + m[0].length;
+        break;
+      }
+    } else {
+      depth += 1;
+    }
+  }
+  if (end === -1) return fallback;
+
+  const inner = html.slice(open, end);
+  const text = decodeHtmlEntities(inner)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text || fallback;
+}
+
+function extractDeveloper(html: string, ld: PlayJsonLd): string {
+  const ldAuthor = typeof ld.author === "string" ? ld.author : ld.author?.name;
+  if (ldAuthor) return ldAuthor;
+  const m = html.match(/href="\/store\/apps\/dev\?id=[^"]*"[^>]*>\s*<span>([^<]+)<\/span>/);
+  return m?.[1]?.trim() ?? "";
 }
 
 function extractPlayScreenshots(html: string): string[] {
@@ -140,7 +193,10 @@ function buildLocaleCandidates(query?: StoreQuery): Array<{ hl: string; gl: stri
   return FALLBACK_LOCALES;
 }
 
-export async function extractFromUrl(input: string): Promise<ListingData> {
+export async function extractFromUrl(
+  input: string,
+  env?: OpenRouterEnv,
+): Promise<ListingData> {
   const parsed = parseStoreUrl(input);
   if (!parsed) {
     throw new Error("Could not parse the store URL. Use an App Store or Play Store link.");
@@ -148,5 +204,5 @@ export async function extractFromUrl(input: string): Promise<ListingData> {
   if (parsed.platform !== "play") {
     throw new Error("Expected a Google Play Store link.");
   }
-  return fetchPlayListing(parsed.appId);
+  return fetchPlayListing(parsed.appId, parsed.query, env);
 }

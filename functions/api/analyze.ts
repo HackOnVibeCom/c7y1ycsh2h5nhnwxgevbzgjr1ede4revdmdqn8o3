@@ -24,7 +24,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const listing = await extractListing(parsed.data.storeUrl);
+    const listing = await extractListing(parsed.data.storeUrl, context.env);
     const aso = score(listing);
     return Response.json({ listing, score: aso });
   } catch (err) {
