@@ -62,7 +62,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const env: Env = {
     OPENROUTER_API_KEY: context.env.OPENROUTER_API_KEY,
-    OPENROUTER_MODEL: "openrouter/auto-beta",
+    OPENROUTER_MODEL: context.env.OPENROUTER_MODEL ?? "openrouter/auto",
   };
 
   try {
