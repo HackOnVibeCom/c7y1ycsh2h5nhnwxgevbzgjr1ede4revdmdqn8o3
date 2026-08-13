@@ -124,7 +124,7 @@ export function Result() {
         <div className="mb-4 flex items-baseline justify-between gap-2">
           <h3 className="font-bold text-cyan-400">Launch roadmap</h3>
           <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Simulasi
+            Simulation
           </span>
         </div>
         <div className="grid gap-4 md:grid-cols-3">

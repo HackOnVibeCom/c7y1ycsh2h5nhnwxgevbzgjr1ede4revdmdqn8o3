@@ -104,7 +104,7 @@ git push upstream main    # mirror to ikhsanRamadhan/launchdesk
 > manual deploy: `npm run build && npm run deploy:own`.
 
 **Enabling real AI output on your own Pages project:**
-- Set `OPENROUTER_API_KEY` (Encrypt) and `OPENROUTER_MODEL=openrouter/auto` under
+- Set `OPENROUTER_API_KEY` (Encrypt) and `OPENROUTER_MODEL=openrouter/auto-beta` under
   Pages → `launchdesk` → Settings → Variables and Secrets, then redeploy.
 - Verify: `GET /api/envcheck` returns `{"hasOpenRouterKey":true,...}`.
 

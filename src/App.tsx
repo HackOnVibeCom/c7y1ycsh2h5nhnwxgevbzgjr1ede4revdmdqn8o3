@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Landing } from "./components/Landing";
 import { Analyze } from "./components/Analyze";
 import { Result } from "./components/Result";
@@ -7,15 +8,38 @@ import { useAppStore } from "./store/appStore";
 
 export function App() {
   const step = useAppStore((s) => s.step);
+  const setStep = useAppStore((s) => s.setStep);
+  const reset = useAppStore((s) => s.reset);
+
+  useEffect(() => {
+    if (window.location.pathname === "/") {
+      setStep("landing");
+    }
+  }, [setStep]);
 
   return (
     <div className="min-h-screen">
       <nav className="border-b border-slate-800">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <span className="font-extrabold tracking-tight">
+          <button
+            type="button"
+            onClick={() => setStep("landing")}
+            className="font-extrabold tracking-tight"
+          >
             Launch<span className="text-cyan-400">Desk</span>
-          </span>
-          <Steps current={step} />
+          </button>
+          <div className="flex items-center gap-4">
+            <Steps current={step} />
+            {step !== "landing" && (
+              <button
+                type="button"
+                onClick={() => reset()}
+                className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-cyan-500 hover:text-cyan-300"
+              >
+                Start over
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
