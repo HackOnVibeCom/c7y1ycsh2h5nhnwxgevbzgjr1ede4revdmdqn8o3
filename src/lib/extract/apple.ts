@@ -23,7 +23,7 @@ export async function fetchAppleListing(appId: string): Promise<ListingData> {
   const url = `https://itunes.apple.com/lookup?id=${appId}&country=US&entity=software`;
   const res = await fetchWithRetry(url);
   if (!res.ok) {
-    throw new Error(`Apple Lookup API responded ${res.status}`);
+    return scrapeAppleListing(appId);
   }
   const data = (await res.json()) as { resultCount: number; results: AppleResult[] };
   const app = data.results[0];
@@ -52,6 +52,92 @@ export async function fetchAppleListing(appId: string): Promise<ListingData> {
     price: app.formattedPrice,
     version: app.version,
   };
+}
+
+interface ScrapeLd {
+  name?: string;
+  description?: string;
+  applicationCategory?: string;
+  image?: string;
+  author?: { name?: string };
+  offers?: { price?: string | number };
+  aggregateRating?: { ratingValue?: string | number; reviewCount?: string | number };
+}
+
+async function scrapeAppleListing(appId: string): Promise<ListingData> {
+  const pageUrl = `https://apps.apple.com/us/app/id${appId}`;
+  const res = await fetch(pageUrl, {
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; LaunchDesk/0.1)" },
+  });
+  if (!res.ok) {
+    throw new Error(`Apple Lookup API responded ${res.status}`);
+  }
+  const html = await res.text();
+
+  const ld = parseSoftwareApplicationLd(html);
+  if (!ld?.name) {
+    throw new Error("App not found on the App Store.");
+  }
+
+  const description = decodeHtmlEntities(ld.description ?? "");
+  const subtitle = extractSubtitle(html);
+  const rating = Number(ld.aggregateRating?.ratingValue ?? 0);
+  const ratingCount = Number(ld.aggregateRating?.reviewCount ?? 0);
+  const price =
+    ld.offers?.price !== undefined
+      ? `$${Number(ld.offers.price).toFixed(2)}`
+      : undefined;
+
+  return {
+    platform: "apple",
+    appId,
+    storeUrl: pageUrl,
+    title: ld.name ?? "",
+    subtitle,
+    description,
+    category: ld.applicationCategory ?? "",
+    genres: ld.applicationCategory ? [ld.applicationCategory] : [],
+    rating: Number.isFinite(rating) ? rating : 0,
+    ratingCount: Number.isFinite(ratingCount) ? ratingCount : 0,
+    screenshots: [],
+    iconUrl: typeof ld.image === "string" ? ld.image : undefined,
+    videoUrl: undefined,
+    developer: ld.author?.name ?? "",
+    price,
+    version: undefined,
+  };
+}
+
+function parseSoftwareApplicationLd(html: string): ScrapeLd | null {
+  const blocks =
+    html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) ?? [];
+  for (const block of blocks) {
+    const inner = block.replace(/<script[^>]*>/, "").replace(/<\/script>/, "").trim();
+    try {
+      const parsed = JSON.parse(inner) as ScrapeLd & { "@type"?: string | string[] };
+      const type = Array.isArray(parsed["@type"]) ? parsed["@type"] : [parsed["@type"]];
+      if (type.includes("SoftwareApplication") && parsed.name) return parsed;
+    } catch {
+      // try next block
+    }
+  }
+  return null;
+}
+
+function extractSubtitle(html: string): string {
+  const m = html.match(/<p class="subtitle[^"]*"[^>]*>([\s\S]*?)<\/p>/i);
+  if (!m?.[1]) return "";
+  return decodeHtmlEntities(m[1]).replace(/<[^>]*>/g, "").trim().slice(0, 100);
+}
+
+function decodeHtmlEntities(input: string): string {
+  return input
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
 }
 
 export async function extractFromUrl(input: string): Promise<ListingData> {

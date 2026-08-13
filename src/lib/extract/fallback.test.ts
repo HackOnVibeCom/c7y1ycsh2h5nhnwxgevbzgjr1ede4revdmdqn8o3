@@ -76,7 +76,28 @@ describe("fetchAppleListing retry", () => {
     expect(attempts).toBe(2);
   });
 
-  it("throws after retries exhausted", async () => {
+  it("scrapes apps.apple.com when lookup keeps failing with 403", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string | URL) => {
+      const s = String(url);
+      if (s.includes("itunes.apple.com")) {
+        return new Response("forbidden", { status: 403 });
+      }
+      return new Response(
+        `<html><script type="application/ld+json">{"@type":"SoftwareApplication","name":"TikTok - Videos, Shop & LIVE","description":"Watch videos.","applicationCategory":"EntertainmentApplication","image":"icon.png","author":{"name":"TikTok Ltd."},"offers":{"price":0},"aggregateRating":{"ratingValue":"4.7","reviewCount":"18337831"}}</script><p class="subtitle svelte-x">Watch, discover and stream!</p></html>`,
+        { status: 200 },
+      );
+    }));
+
+    const out = await fetchAppleListing("835599320");
+    expect(out.title).toBe("TikTok - Videos, Shop & LIVE");
+    expect(out.subtitle).toBe("Watch, discover and stream!");
+    expect(out.rating).toBe(4.7);
+    expect(out.ratingCount).toBe(18337831);
+    expect(out.developer).toBe("TikTok Ltd.");
+    expect(out.price).toBe("$0.00");
+  });
+
+  it("throws when lookup and scrape both fail", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("forbidden", { status: 403 })));
 
     await expect(fetchAppleListing("333903271")).rejects.toThrow(
