@@ -22,6 +22,10 @@ export interface ChatMessage {
   content: string;
 }
 
+const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 3;
+const ATTEMPT_TIMEOUT_MS = 10_000;
+
 async function callOpenRouter(
   messages: ChatMessage[],
   env: OpenRouterEnv,
@@ -32,36 +36,62 @@ async function callOpenRouter(
     throw new Error("OPENROUTER_API_KEY is not configured");
   }
 
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-      "X-Title": "LaunchDesk",
-    },
-    body: JSON.stringify({
-      model: env.OPENROUTER_MODEL ?? DEFAULT_MODEL,
-      messages,
-      temperature: 0.4,
-      max_tokens: options?.maxTokens ?? 1600,
-      response_format: {
-        type: "json_object" 
-      },
-    }),
+  const body = JSON.stringify({
+    model: env.OPENROUTER_MODEL ?? DEFAULT_MODEL,
+    messages,
+    temperature: 0.4,
+    max_tokens: options?.maxTokens ?? 1600,
+    response_format: { type: "json_object" },
   });
 
-  if (!res.ok) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ATTEMPT_TIMEOUT_MS);
+    let res: Response;
+    try {
+      res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "X-Title": "LaunchDesk",
+        },
+        body,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+        continue;
+      }
+      throw err;
+    }
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = (await res.json()) as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const content = data.choices?.[0]?.message?.content;
+      if (content) return content;
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+        continue;
+      }
+      throw new Error("OpenRouter returned an empty completion");
+    }
+
+    if (attempt < MAX_ATTEMPTS && RETRYABLE_STATUS.has(res.status)) {
+      const retryAfter = Number(res.headers.get("Retry-After"));
+      const delay = Number.isFinite(retryAfter) ? Math.min(retryAfter, 3000) : 400 * attempt;
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
     throw new Error(`OpenRouter responded ${res.status}`);
   }
 
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error("OpenRouter returned an empty completion");
-  }
-  return content;
+  throw new Error("OpenRouter request failed after retries");
 }
 
 export async function callLLM(
