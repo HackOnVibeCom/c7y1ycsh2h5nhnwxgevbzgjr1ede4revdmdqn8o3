@@ -1,21 +1,54 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>This team repository has moved</title>
+<title>Your team repository has moved — HackOnVibe</title>
 <style>
-  body { margin:0; min-height:100vh; display:grid; place-items:center; background:#0f1115; color:#e8eaed;
-         font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; padding:24px; }
-  .card { max-width:640px; text-align:center; }
-  h1 { font-size:26px; margin:0 0 16px; }
+  body { margin:0; background:#0f1115; color:#e8eaed; padding:32px 20px;
+         font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .card { max-width:720px; margin:0 auto; }
+  h1 { font-size:28px; margin:0 0 8px; }
+  h2 { font-size:19px; margin:32px 0 10px; }
   a { color:#7cc5ff; word-break:break-all; }
-  .why { opacity:.75; font-size:15px; margin-top:20px; }
+  code, pre { background:#191d24; border-radius:6px; }
+  code { padding:2px 6px; font-size:14px; }
+  pre { padding:14px 16px; overflow-x:auto; font-size:14px; }
+  ol { padding-left:22px; } li { margin:10px 0; }
+  .box { background:#161a21; border-left:3px solid #7cc5ff; padding:14px 18px; border-radius:8px; margin:18px 0; }
+  .muted { opacity:.72; font-size:15px; }
 </style></head>
 <body><div class="card">
   <h1>Your team has a new repository</h1>
-  <p>Teams asked us to keep work-in-progress private, so nobody can find another team's project and copy
-     the idea before judging. Your repository now has an address that cannot be guessed.</p>
-  <p><strong>Work here from now on:</strong><br /><a href="https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3">https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3</a></p>
-  <p><strong>Your project site:</strong><br /><a href="https://c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3.hackonvibe.com">https://c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3.hackonvibe.com</a></p>
-  <p class="why">You have been invited to the new repository — check your GitHub notifications and accept
-     the invitation. This old repository stays read-only and is no longer connected to your site.</p>
+  <p>Please move your work to the new address below.</p>
+
+  <p><strong>Why we did this.</strong> Teams asked us for more privacy while they build. On the old address
+     anyone could guess a team's repository and its live site from the team name, look at an unfinished
+     project and copy the idea before judging. Your team now has a repository at an address that cannot be
+     guessed, so your work stays yours until the results are revealed.</p>
+
+  <div class="box">
+    <p style="margin:0 0 6px"><strong>Your new repository</strong><br /><a href="https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3">https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3</a></p>
+    <p style="margin:0"><strong>Your project site</strong><br /><a href="https://c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3.hackonvibe.com">https://c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3.hackonvibe.com</a></p>
+  </div>
+
+  <p class="muted">You can always find this address in your personal space on HackOnVibe:
+     <a href="https://hackonvibe.com/me">hackonvibe.com/me</a> — the team card shows your repository and site.</p>
+
+  <h2>What to do — three steps</h2>
+  <ol>
+    <li><strong>Accept the invitation.</strong> Open <a href="https://github.com/notifications">GitHub notifications</a>
+        (or <a href="https://github.com/settings/repositories">pending invitations</a>) and accept the invite to the
+        new repository. Without accepting it you will not be able to push.</li>
+    <li><strong>Bring your commits over.</strong> Nothing is lost — everything you already committed here can be
+        pushed to the new repository, with full history:
+      <pre>git clone https://github.com/HackOnVibeCom/2026-08-nashki team
+cd team
+git remote add secure https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3
+git push secure main</pre>
+      Already have the folder on your machine? Then just the last two lines.</li>
+    <li><strong>Work only in the new repository from now on.</strong> Point your day-to-day remote at it:
+      <pre>git remote set-url origin https://github.com/HackOnVibeCom/c7y1ycsh2h5nhnwxgevbzgjr1ede4revdmdqn8o3</pre></li>
+  </ol>
+
+  <p class="muted">This old repository is no longer connected to your project site, and it is not judged.
+     This page is refreshed automatically, so it may replace files you add here — another reason to move.</p>
 </div></body></html>
