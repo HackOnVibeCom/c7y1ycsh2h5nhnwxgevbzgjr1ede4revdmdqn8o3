@@ -110,7 +110,7 @@ export async function fetchPlayListing(
 
 function extractPlayScreenshots(html: string): string[] {
   const urls: string[] = [];
-  const imgRe = /<img[^>]*alt="Screenshot image"[^>]*>/gi;
+  const imgRe = /<img[^>]*data-screenshot-index[^>]*>/gi;
   let m: RegExpExecArray | null;
   while ((m = imgRe.exec(html)) !== null) {
     const src = m[0].match(/src="([^"]+)"/);

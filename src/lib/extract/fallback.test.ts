@@ -56,10 +56,10 @@ describe("fetchPlayListing locale fallback", () => {
   it("extracts screenshots and trailer video from Play HTML", async () => {
     const html =
       `<script type="application/ld+json">{"name":"YouTube","description":"Watch.","aggregateRating":{"ratingValue":"4.2","ratingCount":"15000000"}}</script>` +
-      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" alt="Screenshot image" data-screenshot-index="0">` +
-      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" alt="Screenshot image" data-screenshot-index="1">` +
-      `<img src="https://play-lh.googleusercontent.com/b/bbb=w526-h296" alt="Screenshot image" data-screenshot-index="2">` +
-      `<img src="https://play-lh.googleusercontent.com/c/ccc=w526-h296" alt="Screenshot image" data-screenshot-index="3">` +
+      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" data-screenshot-index="0">` +
+      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" data-screenshot-index="1">` +
+      `<img src="https://play-lh.googleusercontent.com/b/bbb=w526-h296" data-screenshot-index="2">` +
+      `<img src="https://play-lh.googleusercontent.com/c/ccc=w526-h296" data-screenshot-index="3">` +
       `<button data-trailer-url="https://www.youtube.com/embed/__NeP0RqACU?vq=large&amp;rel=0&amp;autohide=1&amp;showinfo=0">`;
 
     vi.stubGlobal("fetch", vi.fn(async () => new Response(html, { status: 200 })));
@@ -75,7 +75,7 @@ describe("fetchPlayListing locale fallback", () => {
   it("leaves videoUrl undefined when no trailer present", async () => {
     const html =
       `<script type="application/ld+json">{"name":"NoVideo","description":"No video here.","aggregateRating":{"ratingValue":"4.0","ratingCount":"100"}}</script>` +
-      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" alt="Screenshot image">`;
+      `<img src="https://play-lh.googleusercontent.com/a/aaa=w526-h296" data-screenshot-index="0">`;
 
     vi.stubGlobal("fetch", vi.fn(async () => new Response(html, { status: 200 })));
 
