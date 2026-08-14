@@ -33,8 +33,9 @@ Global, with a focus on developer-heavy emerging markets where agency services a
 prohibitively expensive: Southeast Asia (Indonesia, Vietnam, Philippines, Thailand),
 India, Latin America (Brazil, Mexico), and parts of Africa. The product is a web app
 that works on any device and its output can target any store locale — including a
-non-English path as a roadmap item. This is the "Global Impact" angle: democratizing
-app promotion for developers who otherwise cannot compete.
+non-English path as a roadmap item. We frame this as the **Business Success** play:
+turning developers' strongest asset — a built product — into a marketable one, with
+agency-quality promotion at a price a solo dev can actually afford.
 
 **4. Who are your competitors?**
 
@@ -44,6 +45,16 @@ AppFollow) — analysis only, expensive, no rewrite loop or promo kit; AI copywr
 (Jasper, Copy.ai) — not app-aware and no quality gate; freelance marketers/agencies —
 slow and unaffordable for solo devs. LaunchDesk combines deterministic, transparent
 scoring with a rewrite loop and publishable promo assets in one free-to-try product.
+
+**6. How does LaunchDesk grow as a business?**
+
+A freemium funnel built on the demo itself: **Free** (Analyze + one Revise per app +
+promo kit) requires no setup and no key, so it spreads by word of mouth inside
+developer communities. **Pro / subscription** (per-grant or recurring) unlocks
+unlimited revisions, batch tracking across an app portfolio, saved A/B variants, and
+priority AI extraction. Because every artifact is derived from real store data and a
+deterministic, judge-verifiable quality gate, the value is visible before any payment
+— which compresses the trial-to-pay step and keeps churn low.
 
 **5. What is your advantage?**
 

@@ -4,7 +4,7 @@
 graded ASO report, an AI rewrite that clears a 28-rule quality gate, and a verified
 promo kit (deep links, QR codes, smart banners, per-channel publish payloads).
 
-Built for **HackOnVibe — August 2026** · Track: **Global Impact**.
+Built for **HackOnVibe — August 2026** · Track: **Business Success**.
 
 > **Live demo (Real AI):** https://launchdesk.pages.dev
 > **Live demo (org / CI):** https://2026-08-nashki.hackonvibe.com
@@ -16,6 +16,19 @@ wall: they don't know their listing is weak, can't afford a marketing agency, an
 have no easy way to fix the store listing or start promoting. LaunchDesk closes
 that gap — a functional backend, real store data, and deterministic quality gates,
 so every output is personally tied to the app the user pasted.
+
+## Why it makes business sense
+
+App-store discovery is pay-to-win: developers who gamble with a weak listing lose
+millions of impression, while agencies charge $200–$2,000/mo for what LaunchDesk
+automates in seconds. LaunchDesk is the low-cost "marketing developer" solo devs
+can't afford — it grades their listing against a transparent 28-rule quality gate,
+rewrites copy until the score clears, and hands them publishable launch assets. The
+business model is a freemium funnel: **free** Analyze + one Revise per app (zero
+setup, no key) draws users in; **Pro** (recurring or per-grant subscription) unlocks
+unlimited revisions, batch app tracking, and priority AI extraction. TAM = the
+millions of indie/solo developers who publish to the App Store and Google Play but
+can't pay an agency — an underserved, developer-heavy, globally distributed market.
 
 ## Features
 
