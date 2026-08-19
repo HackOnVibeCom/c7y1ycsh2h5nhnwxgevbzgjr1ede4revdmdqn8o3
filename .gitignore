@@ -17,6 +17,9 @@ out/
 # wrangler local
 .wrangler/
 
+# agent tooling state
+.omc/
+
 # misc
 .DS_Store
 *.log
